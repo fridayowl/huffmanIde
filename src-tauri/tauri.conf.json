@@ -21,10 +21,16 @@
       "shell": {
         "all": true,
         "execute": true,
+        "sidecar": true,
         "scope": [
           {
             "name": "python",
             "cmd": "python",
+            "args": true
+          },
+          {
+            "name": "python3",
+            "cmd": "python3",
             "args": true
           },
           {
@@ -40,6 +46,7 @@
         "writeFile": true,
         "readDir": true,
         "exists": true,
+        "createDir": true,
         "scope": ["**"]
       },
       "path": {
