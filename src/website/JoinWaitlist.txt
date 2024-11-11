@@ -1,0 +1,176 @@
+import React, { useState } from 'react';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/ui/use-toast";
+import { Loader2, Rocket, Sparkles, Users, Zap } from 'lucide-react';
+
+const JoinWaitlist = () => {
+    const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        email: '',
+        name: '',
+        company: '',
+        role: '',
+        updates: true
+    });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        // Simulate API call
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            toast({
+                title: "Successfully joined waitlist! 🎉",
+                description: "We'll notify you when Huffman launches.",
+            });
+            setOpen(false);
+            setFormData({
+                email: '',
+                name: '',
+                company: '',
+                role: '',
+                updates: true
+            });
+        } catch (error) {
+            toast({
+                title: "Error joining waitlist",
+                description: "Please try again later.",
+                variant: "destructive"
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <>
+            <Button
+                onClick={() => setOpen(true)}
+                className="group relative overflow-hidden bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-8 py-6 rounded-lg font-medium transition-all duration-300"
+            >
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="animate-sparkle">
+                        <Sparkles className="w-5 h-5 text-indigo-200" />
+                    </div>
+                </div>
+                Join Waitlist
+            </Button>
+
+            <AlertDialog open={open} onOpenChange={setOpen}>
+                <AlertDialogContent className="sm:max-w-[425px] bg-gray-900/95 backdrop-blur-xl border border-gray-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl text-white flex items-center gap-2">
+                            <Rocket className="w-6 h-6 text-indigo-400" />
+                            Join the Huffman Waitlist
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-4">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-gray-300">
+                                    <Zap className="w-4 h-4 text-indigo-400" />
+                                    Early access to all premium features
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-300">
+                                    <Users className="w-4 h-4 text-indigo-400" />
+                                    Join our exclusive developer community
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-300">
+                                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                                    Special launch pricing for waitlist members
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="email" className="text-gray-200">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="you@example.com"
+                                        className="bg-gray-800/50 border-gray-700 text-white"
+                                        required
+                                        value={formData.email}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="name" className="text-gray-200">Name</Label>
+                                    <Input
+                                        id="name"
+                                        placeholder="John Doe"
+                                        className="bg-gray-800/50 border-gray-700 text-white"
+                                        required
+                                        value={formData.name}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="company" className="text-gray-200">Company (Optional)</Label>
+                                    <Input
+                                        id="company"
+                                        placeholder="Company Name"
+                                        className="bg-gray-800/50 border-gray-700 text-white"
+                                        value={formData.company}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="role" className="text-gray-200">Role</Label>
+                                    <Input
+                                        id="role"
+                                        placeholder="Developer, Designer, etc."
+                                        className="bg-gray-800/50 border-gray-700 text-white"
+                                        required
+                                        value={formData.role}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                                    />
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="updates"
+                                        checked={formData.updates}
+                                        onCheckedChange={(checked) =>
+                                            setFormData(prev => ({ ...prev, updates: checked as boolean }))
+                                        }
+                                    />
+                                    <label
+                                        htmlFor="updates"
+                                        className="text-sm text-gray-400"
+                                    >
+                                        Keep me updated about new features and announcements
+                                    </label>
+                                </div>
+                            </form>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="sm:justify-between">
+                        <AlertDialogCancel className="bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+                            Cancel
+                        </AlertDialogCancel>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700"
+                        >
+                            {loading ? (
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : null}
+                            {loading ? "Joining..." : "Join Waitlist"}
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
+    );
+};
+
+export default JoinWaitlist;

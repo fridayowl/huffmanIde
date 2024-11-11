@@ -1,0 +1,93 @@
+import React from 'react';
+import useAnalytics from './useAnalytics';
+
+
+export const AnalyticsDashboard: React.FC<{ userId: string }> = ({ userId }) => {
+    const { metrics, isTracking, session } = useAnalytics(userId);
+
+    if (!isTracking) return <div>Starting analytics...</div>;
+
+    return (
+        <div className="grid grid-cols-2 gap-4 p-4">
+            {/* Session Info */}
+            <div className="rounded-lg bg-gray-800 p-4">
+                <h3 className="text-xl font-bold mb-4">Current Session</h3>
+                <div className="space-y-2">
+                    <p>Location: {session?.location?.city}, {session?.location?.country}</p>
+                    {/* <p>Started: {new Date(session?.start_time).toLocaleString()}</p> */}
+                    <p>Environment: {session?.system_info?.python_version}</p>
+                </div>
+            </div>
+
+            {/* Developer Metrics */}
+            <div className="rounded-lg bg-gray-800 p-4">
+                <h3 className="text-xl font-bold mb-4">Developer Metrics</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <MetricCard
+                        title="Coding Time"
+                        value={`${metrics?.usage_trends[0]?.coding_time || 0}m`}
+                    />
+                    <MetricCard
+                        title="Lines Written"
+                        value={metrics?.usage_trends[0]?.lines_written || 0}
+                    />
+                    {/* <MetricCard
+                        title="Success Rate"
+                        // value={`${calculateSuccessRate(metrics?.usage_trends[0])}%`}
+                    /> */}
+                    <MetricCard
+                        title="Test Coverage"
+                        value={`${metrics?.usage_trends[0]?.test_coverage || 0}%`}
+                    />
+                </div>
+            </div>
+
+            {/* Health Metrics */}
+            <div className="rounded-lg bg-gray-800 p-4">
+                <h3 className="text-xl font-bold mb-4">Health Metrics</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <MetricCard
+                        title="Focus Time"
+                        value={`${metrics?.health_trends[0]?.focus_duration || 0}m`}
+                    />
+                    <MetricCard
+                        title="Break Time"
+                        value={`${metrics?.health_trends[0]?.break_duration || 0}m`}
+                    />
+                    <MetricCard
+                        title="Posture Alerts"
+                        value={metrics?.health_trends[0]?.posture_alerts || 0}
+                    />
+                    <MetricCard
+                        title="Eye Strain"
+                        value={metrics?.health_trends[0]?.eye_strain_alerts || 0}
+                    />
+                </div>
+            </div>
+
+            {/* Trends */}
+            <div className="rounded-lg bg-gray-800 p-4">
+                <h3 className="text-xl font-bold mb-4">Trends</h3>
+                <div className="h-64">
+                    <TrendChart data={metrics?.usage_trends || []} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const MetricCard: React.FC<{ title: string; value: string | number }> = ({
+    title,
+    value
+}) => (
+    <div className="bg-gray-700 rounded-lg p-4">
+        <h4 className="text-sm text-gray-400">{title}</h4>
+        <p className="text-2xl font-bold">{value}</p>
+    </div>
+);
+
+const TrendChart: React.FC<{ data: any[] }> = ({ data }) => {
+    // Implement chart visualization using your preferred library
+    // (e.g., recharts, chart.js, etc.)
+    return <div>Chart implementation</div>;
+};

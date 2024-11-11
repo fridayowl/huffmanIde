@@ -1,0 +1,198 @@
+// App.tsx
+import React, { useEffect, useState } from 'react';
+
+import { invoke } from '@tauri-apps/api';
+import { useAnalytics } from './useAnalytics';
+import { getOrCreateUser, updateUser } from './user-management';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  created_at: string;
+  settings: {
+    theme: 'light' | 'dark';
+    notifications_enabled: boolean;
+  };
+}
+
+interface DebugData {
+  timestamp: string;
+  metricsSnapshot: any;
+  sessionInfo: any;
+  systemInfo: any;
+}
+
+function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [debugHistory, setDebugHistory] = useState<DebugData[]>([]);
+
+  // Initialize user
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        const userData = await getOrCreateUser();
+        setUser(userData);
+        console.log('User initialized:', userData);
+      } catch (err) {
+        setError('Failed to initialize user');
+        console.error('User initialization error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initUser();
+  }, []);
+
+  // Initialize analytics after user is loaded
+  const { metrics, isTracking, session, lastUpdate } = useAnalytics(user?.id || '');
+
+  // Debug logging
+  useEffect(() => {
+    if (user && session) {
+      const logData = {
+        userId: user.id,
+        sessionId: session.session_id,
+        isTracking,
+        lastUpdate: lastUpdate?.toLocaleString(),
+        metrics
+      };
+
+      console.group('Analytics Status Update');
+      Object.entries(logData).forEach(([key, value]) => {
+        console.log(`${key}:`, value);
+      });
+      console.groupEnd();
+    }
+  }, [user, session, metrics, isTracking, lastUpdate]);
+
+  // Development helper to view all analytics data
+  const debugAnalytics = async () => {
+    if (!user?.id) return;
+
+    try {
+      const debugData: DebugData = {
+        timestamp: new Date().toISOString(),
+        metricsSnapshot: metrics,
+        sessionInfo: session,
+        systemInfo: await invoke('get_system_info')
+      };
+
+      setDebugHistory(prev => [debugData, ...prev].slice(0, 10)); // Keep last 10 snapshots
+
+      console.group(`Analytics Debug Data - ${debugData.timestamp}`);
+      console.log('Full Analytics Data:', debugData);
+      console.groupEnd();
+    } catch (error) {
+      console.error('Debug data fetch failed:', error);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+    </div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-red-500">
+      Error: {error}
+    </div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Development Tools */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 z-50 space-y-2">
+          <button
+            onClick={debugAnalytics}
+            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm w-full"
+          >
+            Debug Analytics
+          </button>
+
+          {/* Debug History Viewer */}
+          {debugHistory.length > 0 && (
+            <div className="bg-gray-800 p-4 rounded-lg max-h-96 overflow-y-auto">
+              <h3 className="text-sm font-bold mb-2">Debug History</h3>
+              {debugHistory.map((debug, index) => (
+                <div key={debug.timestamp} className="text-xs mb-2 pb-2 border-b border-gray-700">
+                  <p className="text-gray-400">{new Date(debug.timestamp).toLocaleString()}</p>
+                  <pre className="mt-1 overflow-x-auto">
+                    {JSON.stringify(debug.metricsSnapshot, null, 2)}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* User Info */}
+      <div className="p-4 border-b border-gray-800">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold">User Details</h2>
+          <button
+            onClick={async () => {
+              if (user) {
+                const updated = await updateUser({
+                  name: prompt('Enter new name', user.name) || user.name
+                });
+                setUser(updated);
+              }
+            }}
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm"
+          >
+            Edit
+          </button>
+        </div>
+        <pre className="mt-2 p-2 bg-gray-800 rounded overflow-auto">
+          {JSON.stringify(user, null, 2)}
+        </pre>
+      </div>
+
+      {/* Analytics Status */}
+      <div className="p-4 border-b border-gray-800">
+        <h2 className="text-xl font-bold">Analytics Status</h2>
+        <div className="mt-2 space-y-2">
+          <p>
+            Tracking Status:
+            <span className={`ml-2 px-2 py-1 rounded ${isTracking ? 'bg-green-600' : 'bg-red-600'
+              }`}>
+              {isTracking ? 'Active' : 'Inactive'}
+            </span>
+          </p>
+          <p>Session ID: <span className="font-mono">{session?.session_id || 'Not started'}</span></p>
+          <p>Last Update: {lastUpdate?.toLocaleString() || 'Never'}</p>
+        </div>
+      </div>
+
+      {/* Current Metrics Summary */}
+      {metrics && (
+        <div className="p-4">
+          <h2 className="text-xl font-bold mb-4">Current Metrics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-800 p-4 rounded">
+              <h3 className="text-lg font-semibold mb-2">Usage Trends</h3>
+              <pre className="text-sm overflow-auto">
+                {JSON.stringify(metrics.usage_trends[0], null, 2)}
+              </pre>
+            </div>
+            <div className="bg-gray-800 p-4 rounded">
+              <h3 className="text-lg font-semibold mb-2">Health Trends</h3>
+              <pre className="text-sm overflow-auto">
+                {JSON.stringify(metrics.health_trends[0], null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;

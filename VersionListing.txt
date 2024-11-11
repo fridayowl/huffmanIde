@@ -1,0 +1,230 @@
+
+
+
+
+Version 0.1 : Focus on  solving developers problems of coding or code traversal and making changes 
+
+Version 1 Sepreating functions and class and creating connections:  
+        - single file -> class and function flow 
+
+Version 2 Implementing ide: 
+        single file 
+        python ide for editing the file 
+        class and function flow 
+
+Version 2.1  Controlling flows from  ide :
+        single file 
+        python ide 
+            show button to disable and show the flows  @done
+        class flow 
+            button to show or disable function flows   @done 
+
+Version 2.2 Dynamic flow generation-
+        single file 
+        python ide 
+            refresh button
+        blocks 
+            -make the blocks ide friendly           
+        bugs fixed :
+            -function name contains underscore it is not considering that
+
+Version 2.3 Connecting ide with flow blocks-
+        single file 
+        -connecting ide with classes  @done
+        -connecting ide with functions outside the scope of the class  @done
+        Canvas 
+            - adding zoom in and zoom out and dragable functionality to the canvas  @done
+            - when block are at the edges make zoom out automatically or find a way to make it better @later  
+            
+        Bugs Identified  : 
+            Fixing ide focus out  
+
+
+
+Version 2.4 Smoothing IDE  and Connection  and Customizaton -
+        single file  
+        -Changing code block connection color  @done
+        -Making the positions more ordered  @done
+        - Fixing code block out side the class  @done
+        -Making a json file for the customising each connectors color and functionality   @done
+        Bugs to fix : 
+            -Ide focus out when the text changes 
+            - customization not working for ide @done 
+            -Zoom in and Zoom out automaticaly when the file loads(or something better @done
+        Bugs Identified  :  
+            -customization not workign for canvas @moved to next verion
+
+
+Version  2.5 : Improvment on the blocks creation and program strucuturing 
+        Single file  
+        - Imporove setting pannel UI  @done
+        -type: 'class' | 'class_function' | 'code' | 'class_standalone' | 'standalone_function'; change code to stand_alone_code @done
+        add's
+        Bugs to fix : 
+            -Fix standalone functions not connecting with ide  
+            - Fix customization not working for the canvas  @moved 
+
+
+working 2.6 - Closing functions for single file 
+        Single file 
+        - Idenfy the standalone code inside a class 
+            @done
+        - Identify the standalone code and functions seperatly  @done
+        - Fix the connectors not moving as desired  @done
+        - Set the zoom level to 70% 
+        -Fix setting unique id for the blocks rather than the function name or code name
+
+
+
+Version 2.7 - Setting Connectors exact line of the ide  and also make this blocks smaller and compact 
+            - add a directory viewer  @done 
+            - make the block much more simpler and easy to view @done
+            -save last opened folder and last save settings folderview / file type @moved
+            - gesture zoom in and zoom out on canvas @moved
+            - order the function and standalone code based on the line number  @done
+            - passing line number to the blocks @done 
+            - connectors comming from the line numbers rater than the block headers @done
+            Bug 
+            - for some reason  class stand alone codes are starting from ide not from class  @done
+            - fix when class hide is cliked it should hide the class standalone @done
+           
+
+        Notes 👍
+            connector end should be invisible 
+            ide to block workig fine but the all the sub connected also should invisible 
+            subblock to class bloack  both first block and second block is getting invisible
+            ---
+            What i have to do is now make sure the class standalone is treated as class sub nodes 
+            ---
+            Now the conenctor to class stand alone is not disappering
+
+
+
+
+
+Version 2.8 -Import (first phase of mul tiple pages) and inhertience  block (in heritinece in single file )
+            -save last opened folder and last save settings folderview / file type @done
+            - connection and blocks should update when ide updates    @done
+            -gesture zoom in and zoom out on canvas  @low
+            - on focus on code blocks @done 
+            - adding file download and info button @done
+            Bug
+                - Connection head disapears when i clicked invisible @odne
+                - overwrite not working @done
+            Note 
+            -- Improving the  file editing part  @done
+
+Version 2.9 
+        - Make  Ide better  @low
+        - Add multiple file import funvtionalities
+        - wrapping it into a bundle for windows and  mac @done
+        - first version of git import  @low
+        - first version of code highlighter  @done
+        - first version of code error highlighter  @done
+        - Close certain ide @done
+        - first verison of code analyiss 
+            -security scalability ,maintaiblity , potential improvments @moved
+        -first version of share the workflow @done 
+        -fix the block size visibile 
+        -if i move id then all the blocs should move along with it or create a small inner canvas around them so that these items can be moved  @done
+        - implement python compiler @done
+
+
+        - build
+            -splash screen
+        -Working on 
+            - Python compiler that can execute a python code @done
+            -close a individual ide  @done
+            - canvas around a file @done 
+            - improvment on block listing @done
+             -improvemnton canvas wrapper  @done
+            - added auto minimizing functionality for  navigation bar  @done
+            - Added   documentation   part @done
+            -block based run @done 
+
+            Next 
+            - pass the doumentation details -> to blocks  @done
+            - list it if the documationn exit for the block  @done
+            - Block run is @done 
+            - add documentation and save it from blocks @done
+
+            - Have multiple ide  
+
+
+
+Version 2.9.1 
+        
+        - Block size adjusting when edit , run , documentation are openened @low priority  @done
+        - makeing the ide smoother @done 
+        - Multiple Files 
+        - Testing the block code  
+
+        Bug fixes 
+            - the block toogle visibility is not woring as excepted @done 
+            - fix editing not working for blocks @done 
+            - fix block save duplicating the saved block on the ide 
+            - when auto or reset is clicked then is should position correctly  @done 
+            - stability issue while editing 
+
+        Notes 
+            - Testing : 
+                identify what types of testing can be done for each kind of blocks 
+                ( check if it can be manual or automatic )
+            - Priority High No code update  while editign @done
+                -moving edit and saving button below the ide 
+                - on edit mode when click on anytext cursor should be there
+                - fixing text conveterd to unsupported literals 
+                - Highlighter 
+            - When block make any changes update back to the code
+            -taur download and save files  @done
+
+version 2.9.2 
+
+        - when you click on the ide -> it should automatically zoom in 
+        - Editing save 
+        - make sure the blocks are updated correctly 
+        - block expand automaticaly adjust the other block 
+        - make sure refresh works
+        - fix the directory 
+        - bug free typing experence 
+        - bug free block action experence 
+
+
+
+version 2.9.9 
+        - saving Documentation @done 
+        - saving file back to ide  @done
+        - saving report Testing and analytics  @done
+        - bugs 
+            - connection color @mior fix 
+        - onboarding @done
+        - Highlight edit on click(double clikc)
+
+
+
+
+        
+
+
+
+
+
+        
+
+
+Upcoming Versions : 
+Version 3 : Focus on Functions that helps Testing much easier and bug fixing  and Documentation (lock in features)
+        :save documetation per blokc and users can import it directly
+
+Version 5 : Focus on code generation and code analysis 
+
+Version 8 :Focus on multiple files and  multiple import visualisation
+
+Version 10: Adding React Support( side by side )
+
+
+Version 12 :Git Tracking fro each blocks
+
+Version 14 :Multiple author for editing and working IDE  
+
+

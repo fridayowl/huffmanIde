@@ -1,0 +1,7 @@
+https://v2.tauri.app/plugin/file-system/
+
+ 
+ for running dev:
+ 
+ npm run tauri dev
+

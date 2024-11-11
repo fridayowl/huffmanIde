@@ -1,0 +1,82 @@
+{
+  "blocks": {
+    "class": {
+      "backgroundColor": "#282A36",
+      "borderColor": "#50FA7B",
+      "textColor": "#F8F8F2",
+      "headerColor": "#44475A"
+    },
+    "class_function": {
+      "backgroundColor": "#44475A",
+      "borderColor": "#8BE9FD",
+      "textColor": "#F8F8F2",
+      "headerColor": "#282A36"
+    },
+    "code": {
+      "backgroundColor": "#282A36",
+      "borderColor": "#FFB86C",
+      "textColor": "#F8F8F2",
+      "headerColor": "#44475A"
+    },
+    "class_standalone": {
+      "backgroundColor": "#44475A",
+      "borderColor": "#BD93F9",
+      "textColor": "#F8F8F2",
+      "headerColor": "#282A36"
+    },
+    "standalone_function": {
+      "backgroundColor": "#282A36",
+      "borderColor": "#FF79C6",
+      "textColor": "#F8F8F2",
+      "headerColor": "#44475A"
+    }
+  },
+  "connections": {
+    "idecontainsclass": {
+      "lineColor": "#50FA7B",
+      "arrowHead": "triangle",
+      "lineStyle": "solid"
+    },
+    "class_contains_functions": {
+      "lineColor": "#8BE9FD",
+      "arrowHead": "diamond",
+      "lineStyle": "dashed"
+    },
+    "class_contains_standalone": {
+      "lineColor": "#BD93F9",
+      "arrowHead": "diamond",
+      "lineStyle": "dotted"
+    },
+    "inherits": {
+      "lineColor": "#FF79C6",
+      "arrowHead": "triangle",
+      "lineStyle": "solid"
+    },
+    "composes": {
+      "lineColor": "#8BE9FD",
+      "arrowHead": "diamond",
+      "lineStyle": "dashed"
+    },
+    "idecontainsstandalonecode": {
+      "lineColor": "#FFB86C",
+      "arrowHead": "arrow",
+      "lineStyle": "solid"
+    }
+  },
+  "canvas": {
+    "backgroundColor": "#282A36",
+    "gridColor": "#44475A",
+    "gridSpacing": 20
+  },
+  "ide": {
+    "backgroundColor": "#282A36",
+    "textColor": "#F8F8F2",
+    "lineNumbersColor": "#6272A4",
+    "highlightColor": "#44475A"
+  },
+  "buttons": {
+    "backgroundColor": "#50FA7B",
+    "textColor": "#282A36",
+    "hoverBackgroundColor": "#8BE9FD"
+  }
+}
