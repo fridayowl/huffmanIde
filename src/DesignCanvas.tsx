@@ -437,12 +437,12 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
                     <button
                         onClick={() => setIsTemplatesPanelOpen(true)}
                         className="group relative px-4 py-2 bg-[#1e1e2d] text-gray-400 rounded-lg overflow-hidden hover:-translate-y-0.5 hover:text-blue-400 transition-all duration-300"
-                        title="Choose Template"
+                        title="Themes"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="absolute inset-0 rounded-lg bg-blue-500/10 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="relative z-10">
-                            <span className="text-sm">Choose Template</span>
+                            <span className="text-sm">Themes</span>
                         </div>
                     </button>
 
@@ -566,7 +566,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg w-11/12 max-w-6xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold">Choose a Template</h2>
+                            <h2 className="text-2xl font-bold">Choose a Theme</h2>
                             <button onClick={() => setIsTemplatesPanelOpen(false)} className="p-1 rounded-full hover:bg-gray-200">
                                 <X size={24} />
                             </button>
@@ -594,7 +594,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg w-11/12 max-w-6xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold">Choose a Template</h2>
+                            <h2 className="text-2xl font-bold">Choose a Theme</h2>
                             <button onClick={() => setIsTemplatesPanelOpen(false)} className="p-1 rounded-full hover:bg-gray-200">
                                 <X size={24} />
                             </button>

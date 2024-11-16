@@ -8,21 +8,31 @@ import {
     CheckCircle2,
     Power,
     Info,
-    Settings
+    Settings,
+    ChevronDown
 } from 'lucide-react';
-import ollamaLogo from '../assets/ollamalog.png'
 
 const OllamaStatusButton = () => {
     const navigate = useNavigate();
     const [status, setStatus] = useState<OllamaStatus | null>(null);
     const [isChecking, setIsChecking] = useState(true);
     const [showDetails, setShowDetails] = useState(false);
+    const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
     const checkStatus = async () => {
         setIsChecking(true);
         try {
             const ollamaStatus = await checkOllamaStatus();
             setStatus(ollamaStatus);
+
+            // Get the selected model from localStorage or use the first available model
+            const storedModel = localStorage.getItem('selectedOllamaModel');
+            if (storedModel && ollamaStatus.installedModels.includes(storedModel)) {
+                setSelectedModel(storedModel);
+            } else if (ollamaStatus.installedModels.length > 0) {
+                setSelectedModel(ollamaStatus.installedModels[0]);
+                localStorage.setItem('selectedOllamaModel', ollamaStatus.installedModels[0]);
+            }
         } catch (error) {
             console.error('Error checking Ollama status:', error);
         } finally {
@@ -32,10 +42,15 @@ const OllamaStatusButton = () => {
 
     useEffect(() => {
         checkStatus();
-        // Check status every 30 seconds
         const interval = setInterval(checkStatus, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    const handleModelSelect = (model: string) => {
+        setSelectedModel(model);
+        localStorage.setItem('selectedOllamaModel', model);
+        setShowDetails(false);
+    };
 
     const getStatusConfig = () => {
         if (!status) {
@@ -71,8 +86,8 @@ const OllamaStatusButton = () => {
         return {
             bgColor: 'bg-green-600',
             textColor: 'text-green-100',
-            icon: null ,
-            text: 'Ready',
+            icon: Brain,
+            text: selectedModel || 'Ready',
             pulseColor: 'bg-green-400'
         };
     };
@@ -84,28 +99,28 @@ const OllamaStatusButton = () => {
         <div className="relative">
             <div className="flex items-center gap-2">
                 <button
-                    onClick={() => setShowDetails(!showDetails)}
+                    onClick={() => status?.isRunning && setShowDetails(!showDetails)}
                     className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg ${config.bgColor} ${config.textColor} hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl`}
                 >
                     {isChecking ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                         <>
-                                <img src={ollamaLogo} alt="Ollama Logo" className="w-5 h-5" />
+                            <Brain className="w-5 h-5" />
                             <span className="font-medium">{config.text}</span>
-
-                            {/* Animated pulse indicator */}
+                            {status?.isRunning && (
+                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`} />
+                            )}
                             <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                <span className={`flex h-2 w-2 relative`}>
-                                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${config.pulseColor} opacity-75`}></span>
-                                    <span className={`relative inline-flex rounded-full h-2 w-2 ${config.pulseColor}`}></span>
+                                <span className="flex h-2 w-2 relative">
+                                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${config.pulseColor} opacity-75`} />
+                                    <span className={`relative inline-flex rounded-full h-2 w-2 ${config.pulseColor}`} />
                                 </span>
                             </div>
                         </>
                     )}
                 </button>
 
-                {/* Settings Button */}
                 <button
                     onClick={() => navigate('/aisetup')}
                     className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl"
@@ -115,38 +130,59 @@ const OllamaStatusButton = () => {
                 </button>
             </div>
 
-            {/* Popup details panel */}
             {showDetails && status && (
-                <div className="absolute top-full mt-2 w-64 p-4 bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-700">
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-400">Installation</span>
-                            {status.isInstalled ? (
-                                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                            ) : (
-                                <AlertTriangle className="w-4 h-4 text-red-400" />
-                            )}
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-400">Service</span>
-                            {status.isRunning ? (
-                                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                            ) : (
-                                <Power className="w-4 h-4 text-yellow-400" />
-                            )}
-                        </div>
-                        {status.version && (
+                <div className="absolute top-full mt-2 w-72 p-4 bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-700">
+                    <div className="space-y-4">
+                        {/* Status Section */}
+                        <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Version</span>
-                                <span className="text-gray-300">{status.version}</span>
+                                <span className="text-gray-400">Status</span>
+                                {status.isRunning ? (
+                                    <span className="text-green-400 flex items-center gap-1">
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        Running
+                                    </span>
+                                ) : (
+                                    <span className="text-yellow-400 flex items-center gap-1">
+                                        <Power className="w-4 h-4" />
+                                        Stopped
+                                    </span>
+                                )}
                             </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-400">Models</span>
-                            <span className="text-gray-300">{status.installedModels.length}</span>
+                            {status.version && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-400">Version</span>
+                                    <span className="text-gray-300">{status.version}</span>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Models Section */}
+                        <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-gray-300">Installed Models</h4>
+                            <div className="space-y-1 max-h-40 overflow-y-auto">
+                                {status.installedModels.map((model) => (
+                                    <button
+                                        key={model}
+                                        onClick={() => handleModelSelect(model)}
+                                        className={`w-full px-3 py-2 rounded-lg text-left transition-all duration-200 ${selectedModel === model
+                                                ? 'bg-green-600/20 text-green-400'
+                                                : 'hover:bg-gray-700/50 text-gray-300'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span>{model}</span>
+                                            {selectedModel === model && (
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            )}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {status.error && (
-                            <div className="flex items-start gap-2 mt-2 p-2 bg-red-900/20 rounded">
+                            <div className="flex items-start gap-2 p-2 bg-red-900/20 rounded">
                                 <Info className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                                 <p className="text-red-400 text-sm">{status.error}</p>
                             </div>
