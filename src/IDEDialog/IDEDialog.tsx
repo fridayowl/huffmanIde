@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import TestingPanel from '../TestingPanel';
 import { RunPanel } from './RunButtonPanel';
 import { AnalyticsPanel } from '../AnalyticsPanel';
-import { DocumentationPanel } from '../DocumentationPanel';
+import { DocumentationPanel } from './DocumentationPanel';
 import MainEditor from './MainEditor';
 
 interface IDEDialogProps {
@@ -141,6 +141,7 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
                 {panelsVisible && (
                     <div className="w-80 flex flex-col gap-4">
                         <DocumentationPanel
+                            code={content}
                             customization={customization}
                             fileName={fileName}
                             isFromIDE={true}

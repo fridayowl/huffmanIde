@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Edit, Save, RefreshCw, FileText, X } from 'lucide-react';
-import { IDESidePanelProps } from './types';
+import { BookOpen, Edit, Save, RefreshCw, FileText, X, Wand2, Loader2 } from 'lucide-react';
+import { IDESidePanelProps } from '../types';
+import { DocumentationGenerator } from './DocumentationGenerator';
 
 interface Documentation {
     documentation: string;
@@ -17,14 +18,17 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
     fileName: string;
     blockId: string;
     isFromIDE?: boolean;
+    code?: string;
 }> = ({
     customization,
     fileName,
-    blockId ,
-    isFromIDE = false
+    blockId,
+    isFromIDE = false,
+    code = ''
 }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [isLoading, setIsLoading] = useState(false);
+        const [isGenerating, setIsGenerating] = useState(false);
         const [documentation, setDocumentation] = useState<Documentation>({
             documentation: '',
             lastUpdated: new Date().toISOString(),
@@ -32,6 +36,7 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
             summary: ''
         });
         const [editedContent, setEditedContent] = useState('');
+        const [error, setError] = useState<string | null>(null);
 
         const getDocumentationFile = () => {
             const docFileName = `${fileName}.documentation.json`;
@@ -106,8 +111,45 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
 
                 setDocumentation(newDoc);
                 setIsEditing(false);
+                setError(null);
             } catch (error) {
                 console.error('Error saving documentation:', error);
+                setError('Failed to save documentation');
+            }
+        };
+
+        const handleGenerateDocumentation = async () => {
+            if (!code) {
+                setError('No code provided for documentation generation');
+                return;
+            }
+
+            setIsGenerating(true);
+            setError(null);
+
+            try {
+                const result = await DocumentationGenerator.generate(code, {
+                    includeExamples: true,
+                    includeParameters: true,
+                    includeReturns: true,
+                    style: 'google'
+                });
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                if (!result.documentation) {
+                    throw new Error('No documentation generated');
+                }
+
+                setEditedContent(result.documentation);
+                await handleSave();
+            } catch (error) {
+                console.error('Error generating documentation:', error);
+                setError(error instanceof Error ? error.message : 'Failed to generate documentation');
+            } finally {
+                setIsGenerating(false);
             }
         };
 
@@ -129,8 +171,8 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
                     backgroundColor: customization.backgroundColor,
                     borderColor: `${customization.textColor}10`,
                     height: '40vh',
-                    position: 'relative', // Add this to establish stacking context
-                    zIndex: 0 // Base z-index
+                    position: 'relative',
+                    zIndex: 0
                 }}
             >
                 {/* Header */}
@@ -140,7 +182,7 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
                         backgroundColor: `${customization.highlightColor}10`,
                         borderColor: `${customization.textColor}10`,
                         position: 'relative',
-                        zIndex: 2 // Higher than content area
+                        zIndex: 2
                     }}
                 >
                     <div className="flex items-center gap-2">
@@ -150,6 +192,19 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
                         </h3>
                     </div>
                     <div className="flex items-center gap-1">
+                        <button
+                            onClick={handleGenerateDocumentation}
+                            disabled={isGenerating}
+                            className="p-1 rounded hover:bg-white/10 flex items-center gap-1"
+                            style={{ color: customization.textColor }}
+                            title="Generate Documentation"
+                        >
+                            {isGenerating ? (
+                                <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                                <Wand2 size={14} />
+                            )}
+                        </button>
                         {!isEditing ? (
                             <button
                                 onClick={() => setIsEditing(true)}
@@ -179,12 +234,26 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
                     </div>
                 </div>
 
+                {/* Error Message */}
+                {error && (
+                    <div
+                        className="p-2 m-2 rounded text-sm"
+                        style={{
+                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                            color: '#ff4444',
+                            border: '1px solid rgba(255, 0, 0, 0.2)'
+                        }}
+                    >
+                        {error}
+                    </div>
+                )}
+
                 {/* Content Area */}
                 <div
                     className="p-4 h-[calc(40vh-120px)] overflow-y-auto"
                     style={{
                         position: 'relative',
-                        zIndex: 1 // Higher than base, lower than header
+                        zIndex: 1
                     }}
                 >
                     {isEditing ? (
@@ -198,9 +267,9 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
                                     color: customization.textColor,
                                     border: `1px solid ${customization.textColor}20`,
                                     position: 'relative',
-                                    zIndex: 3, // Highest in the stack
-                                    pointerEvents: 'auto', // Explicitly enable pointer events
-                                    cursor: 'text' // Explicitly set cursor
+                                    zIndex: 3,
+                                    pointerEvents: 'auto',
+                                    cursor: 'text'
                                 }}
                                 spellCheck={false}
                                 autoFocus
@@ -243,7 +312,7 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
                         color: customization.textColor,
                         backgroundColor: customization.backgroundColor,
                         position: 'relative',
-                        zIndex: 2 // Higher than content area
+                        zIndex: 2
                     }}
                 >
                     <div className="flex items-center gap-1">
@@ -254,5 +323,4 @@ export const DocumentationPanel: React.FC<IDESidePanelProps & {
                 </div>
             </div>
         );
-    
     };

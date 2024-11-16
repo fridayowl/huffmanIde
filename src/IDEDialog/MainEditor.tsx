@@ -286,19 +286,7 @@ const MainEditor: React.FC<MainEditorProps> = ({
                     )}
                 </div>
                 <div className="flex items-center gap-2">
-                    {onRun && (
-                        <button
-                            onClick={handleRun}
-                            disabled={isRunning}
-                            className="p-2 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2"
-                            style={{
-                                color: customization.textColor,
-                                opacity: isRunning ? 0.5 : 1
-                            }}>
-                            {isRunning ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-                            <span className="text-sm">{isRunning ? 'Running...' : 'Run'}</span>
-                        </button>
-                    )}
+                 
                     <button
                         onClick={() => setShowGeneratePanel(true)}
                         className="p-2 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2"
