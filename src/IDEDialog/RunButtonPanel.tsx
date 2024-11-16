@@ -10,22 +10,26 @@ interface RunPanelProps {
         highlightColor: string;
         lineNumbersColor: string;
     };
-    onBeforeRun?: () => Promise<boolean>;
+    onBeforeRun?: () => Promise<void>;
+    isRunning: boolean;
+    setIsRunning: (running: boolean) => void;
 }
 
 export const RunPanel: React.FC<RunPanelProps> = ({
     code,
     customization,
-    onBeforeRun
+    onBeforeRun,
+    isRunning,
+    setIsRunning
 }) => {
     const [isPythonAvailable, setIsPythonAvailable] = useState<boolean>(false);
     const [output, setOutput] = useState<string>('');
     const [error, setError] = useState<string>('');
-    const [isRunning, setIsRunning] = useState(false);
     const [executionTime, setExecutionTime] = useState<number | null>(null);
     const [history, setHistory] = useState<ExecutionResult[]>([]);
     const [showHistory, setShowHistory] = useState(false);
 
+    // Initialize Python
     useEffect(() => {
         const initPython = async () => {
             const available = await pythonExecutor.initialize();
@@ -38,6 +42,13 @@ export const RunPanel: React.FC<RunPanelProps> = ({
         initPython();
     }, []);
 
+    // Clear output when code changes
+    useEffect(() => {
+        setOutput('');
+        setError('');
+        setExecutionTime(null);
+    }, [code]);
+
     const executeCode = async () => {
         if (!code || !isPythonAvailable) return;
 
@@ -46,10 +57,12 @@ export const RunPanel: React.FC<RunPanelProps> = ({
         setError('');
 
         try {
-            // Call onBeforeRun if provided
+            // Always attempt to save first
             if (onBeforeRun) {
-                const shouldProceed = await onBeforeRun();
-                if (!shouldProceed) {
+                try {
+                    await onBeforeRun();
+                } catch (saveError) {
+                    console.error('Failed to save before running:', saveError);
                     const continueAnyway = window.confirm('Failed to save changes. Run anyway?');
                     if (!continueAnyway) {
                         setIsRunning(false);
@@ -75,7 +88,6 @@ export const RunPanel: React.FC<RunPanelProps> = ({
         }
     };
 
-    // Rest of the component remains the same...
     const handleCopy = async (content: string) => {
         try {
             await navigator.clipboard.writeText(content);
@@ -157,14 +169,14 @@ Timestamp: ${new Date().toLocaleString()}
                                 title="Download Output">
                                 <Download size={14} style={{ color: customization.textColor }} />
                             </button>
+                            <button
+                                onClick={clearOutput}
+                                className="p-1 rounded hover:bg-white/10 transition-colors"
+                                title="Clear Output">
+                                <X size={14} style={{ color: customization.textColor }} />
+                            </button>
                         </>
                     )}
-                    {/* <button
-                        onClick={clearOutput}
-                        className="p-1 rounded hover:bg-white/10 transition-colors"
-                        title="Clear Output">
-                        <X size={64} style={{ color: customization.textColor }} />
-                    </button> */}
                 </div>
             </div>
 

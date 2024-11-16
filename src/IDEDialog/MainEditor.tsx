@@ -1,3 +1,4 @@
+// MainEditor.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     X, Save, Settings, Download, Copy,
@@ -23,11 +24,10 @@ interface MainEditorProps {
     };
     onSave: (content: string) => Promise<void>;
     onClose: () => void;
-    onCopy?: () => void;
     onRun?: () => void;
+    onContentChange?: (newContent: string) => void;
 }
 
-// Define custom syntax highlighting
 const syntaxHighlightingStyle = HighlightStyle.define([
     { tag: tags.keyword, color: "#FF79C6", fontWeight: "bold" },
     { tag: tags.operator, color: "#FF79C6" },
@@ -46,7 +46,6 @@ const syntaxHighlightingStyle = HighlightStyle.define([
     { tag: tags.attributeName, color: "#50FA7B" }
 ]);
 
-// Create compartments for dynamic configuration
 const fontSizeCompartment = new Compartment();
 const tabSizeCompartment = new Compartment();
 
@@ -56,26 +55,40 @@ const MainEditor: React.FC<MainEditorProps> = ({
     customization,
     onSave,
     onClose,
-    onCopy,
-    onRun
+    onRun,
+    onContentChange
 }) => {
-    // Core state
-    const [content, setContent] = useState(code || '');
+    const [content, setContent] = useState<string>(code ?? '');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
-
-    // UI state
     const [showSettings, setShowSettings] = useState(false);
     const [showGeneratePanel, setShowGeneratePanel] = useState(false);
     const [fontSize, setFontSize] = useState(14);
     const [tabSize, setTabSize] = useState(4);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
-    // Refs
     const editorRef = useRef<HTMLDivElement | null>(null);
     const editorViewRef = useRef<EditorView | null>(null);
 
-    // Handle generated code
+    // Update content when prop changes
+    useEffect(() => {
+        const newContent = code || ''; // Handle null case
+        if (newContent !== content) {
+            setContent(newContent);
+            if (editorViewRef.current) {
+                const transaction = editorViewRef.current.state.update({
+                    changes: {
+                        from: 0,
+                        to: editorViewRef.current.state.doc.length,
+                        insert: newContent // Now guaranteed to be string
+                    }
+                });
+                editorViewRef.current.dispatch(transaction);
+            }
+        }
+    }, [code]);
+
     const handleCodeGenerated = useCallback((generatedCode: string) => {
         if (!editorViewRef.current) return;
 
@@ -89,61 +102,70 @@ const MainEditor: React.FC<MainEditorProps> = ({
         });
 
         editorViewRef.current.dispatch(transaction);
+        const newContent = editorViewRef.current.state.doc.toString();
+        setContent(newContent);
+        onContentChange?.(newContent);
         setHasUnsavedChanges(true);
         setShowGeneratePanel(false);
-    }, []);
+    }, [onContentChange]);
 
-    // Save functionality
     const handleSave = useCallback(async () => {
         if (!hasUnsavedChanges) return;
 
         setIsSaving(true);
+        setSaveError(null);
+
         try {
             await onSave(content);
             setHasUnsavedChanges(false);
         } catch (error) {
             console.error('Error saving:', error);
+            setSaveError(error instanceof Error ? error.message : 'Failed to save changes');
+            throw error;
         } finally {
             setTimeout(() => setIsSaving(false), 500);
         }
     }, [content, hasUnsavedChanges, onSave]);
 
-    // Run handler with auto-save
     const handleRun = useCallback(async () => {
         if (!onRun) return;
 
         setIsRunning(true);
         try {
-            if (hasUnsavedChanges) {
-                await handleSave();
-            }
+            await handleSave();
             await onRun();
+        } catch (error) {
+            console.error('Error during run:', error);
+            const proceed = window.confirm('Failed to save changes. Run anyway?');
+            if (proceed) {
+                await onRun();
+            }
         } finally {
             setIsRunning(false);
         }
-    }, [hasUnsavedChanges, handleSave, onRun]);
+    }, [handleSave, onRun]);
 
-    // Copy handler
     const handleCopy = useCallback(() => {
-        if (onCopy) {
-            onCopy();
-        } else {
-            navigator.clipboard.writeText(content);
-        }
-    }, [content, onCopy]);
+        navigator.clipboard.writeText(content);
+    }, [content]);
 
-    // Handle close with unsaved changes
     const handleClose = useCallback(async () => {
         if (hasUnsavedChanges) {
             const shouldSave = window.confirm('Do you want to save your changes before closing?');
             if (shouldSave) {
-                await handleSave();
+                try {
+                    await handleSave();
+                } catch (error) {
+                    const forcedClose = window.confirm('Failed to save changes. Close anyway?');
+                    if (!forcedClose) return;
+                }
             }
         }
         onClose();
     }, [hasUnsavedChanges, handleSave, onClose]);
 
-    // CodeMirror setup
+    // Initialize CodeMirror editor
+    
     useEffect(() => {
         if (!editorRef.current || editorViewRef.current) return;
 
@@ -186,40 +208,37 @@ const MainEditor: React.FC<MainEditorProps> = ({
             },
         });
 
-        const initEditor = () => {
-            const state = EditorState.create({
-                doc: content,
-                extensions: [
-                    basicSetup,
-                    python(),
-                    customTheme,
-                    syntaxHighlighting(syntaxHighlightingStyle),
-                    EditorView.lineWrapping,
-                    fontSizeCompartment.of(EditorView.theme({
-                        '.cm-content': { fontSize: `${fontSize}px` },
-                        '.cm-gutters': { fontSize: `${fontSize - 2}px` },
-                    })),
-                    tabSizeCompartment.of(EditorState.tabSize.of(tabSize)),
-                    keymap.of([indentWithTab]),
-                    EditorView.updateListener.of((update) => {
-                        if (update.docChanged) {
-                            const newContent = update.state.doc.toString();
-                            setContent(newContent);
-                            setHasUnsavedChanges(true);
-                        }
-                    }),
-                ],
-            });
+        const state = EditorState.create({
+            doc: content || undefined,
+            extensions: [
+                basicSetup,
+                python(),
+                customTheme,
+                syntaxHighlighting(syntaxHighlightingStyle),
+                EditorView.lineWrapping,
+                fontSizeCompartment.of(EditorView.theme({
+                    '.cm-content': { fontSize: `${fontSize}px` },
+                    '.cm-gutters': { fontSize: `${fontSize - 2}px` },
+                })),
+                tabSizeCompartment.of(EditorState.tabSize.of(tabSize)),
+                keymap.of([indentWithTab]),
+                EditorView.updateListener.of((update) => {
+                    if (update.docChanged) {
+                        const newContent = update.state.doc.toString();
+                        setContent(newContent);
+                        onContentChange?.(newContent);
+                        setHasUnsavedChanges(true);
+                    }
+                }),
+            ],
+        });
 
-            const view = new EditorView({
-                state,
-                parent: editorRef.current!,
-            });
+        const view = new EditorView({
+            state,
+            parent: editorRef.current,
+        });
 
-            editorViewRef.current = view;
-        };
-
-        initEditor();
+        editorViewRef.current = view;
 
         return () => {
             if (editorViewRef.current) {
@@ -375,6 +394,13 @@ const MainEditor: React.FC<MainEditorProps> = ({
             <div className="relative" style={{ height: 'calc(90vh - 56px)' }}>
                 <div ref={editorRef} className="h-full w-full" />
             </div>
+
+            {/* Error Message */}
+            {saveError && (
+                <div className="absolute bottom-4 right-4 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg">
+                    {saveError}
+                </div>
+            )}
         </div>
     );
 };
