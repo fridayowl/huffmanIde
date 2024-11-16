@@ -5,7 +5,7 @@ import ComingSoon from './ComingSoon';
 import BlockExecutionPanel from './BlockExecutionPannel';
 import DocumentationDialog from './DocumentationDialog';
 import FocusedTestPanel from './FocusedTestPanel';
-import IDEDialog from './IDEDialog';
+import IDEDialog from './IDEDialog/IDEDialog';
 import PythonSyntaxHighlighter from './PythonSyntaxHighlighter';
 import { BlockHeader } from './BlockHeader';
 
@@ -387,9 +387,9 @@ const Block: React.FC<BlockProps> = ({
                 overflow: 'hidden'
             }}
             onClick={() => onSelect()}
-           
+
         >
-          
+
             {/* Header Section */}
             {/* <div className="p-2 flex justify-between items-center"
                 onClick={handleBlockHeaderClick}
@@ -485,7 +485,7 @@ const Block: React.FC<BlockProps> = ({
                 name={name}
                 customization={blockStyle}
                 onHeaderClick={handleBlockHeaderClick}
-                
+
             />
 
             {/* Details Section */}
@@ -514,8 +514,8 @@ const Block: React.FC<BlockProps> = ({
                                 color: customization.ide?.textColor || '#000000',
                                 paddingLeft: '20px'
                             }}
-                              
-                            >
+
+                        >
                             {renderCodeWithLineNumbers()}
                         </pre>
                     )}

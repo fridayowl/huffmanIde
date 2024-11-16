@@ -9,10 +9,11 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { keymap } from '@codemirror/view';
 import { indentWithTab } from '@codemirror/commands';
 
-import TestingPanel from './TestingPanel';
-import { RunPanel } from './RunButtonPanel';
-import { AnalyticsPanel } from './AnalyticsPanel';
-import { DocumentationPanel } from './DocumentationPanel';
+import TestingPanel from '../TestingPanel';
+import { RunPanel } from '../RunButtonPanel';
+import { AnalyticsPanel } from '../AnalyticsPanel';
+import { DocumentationPanel } from '../DocumentationPanel';
+import MainEditor from './MainEditor';
 
 interface IDEDialogProps {
     code?: string | null;
@@ -74,7 +75,7 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
     const [tabSize, setTabSize] = useState(4);
     const [panelsVisible, setPanelsVisible] = useState(true);
     const [isRunning, setIsRunning] = useState(false);
-    const [isFromIDE,setIsFromIDE] = useState(false)
+    const [isFromIDE, setIsFromIDE] = useState(false)
     const [blockid, setBlockid] = useState(blockId)
     useEffect(() => {
         if (sourceType === 'ide') {
@@ -85,7 +86,7 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
     // Refs
     const editorRef = useRef<HTMLDivElement | null>(null);
     const editorViewRef = useRef<EditorView | null>(null);
-  
+
 
 
     // Save functionality with success callback
@@ -96,7 +97,7 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
         try {
             if (onCodeChange) {
                 await onCodeChange(content);
-            
+
             }
             setHasUnsavedChanges(false);
             return true;
@@ -112,14 +113,22 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
     const handleRun = useCallback(async () => {
         setIsRunning(true);
         try {
+            // Always attempt to save before running
+            let saveSuccess = true;
             if (hasUnsavedChanges) {
-                const saveSuccess = await handleSave();
+                saveSuccess = await handleSave();
                 if (!saveSuccess) {
                     const proceed = window.confirm('Failed to save changes. Run anyway?');
-                    if (!proceed) return;
+                    if (!proceed) {
+                        return;
+                    }
                 }
             }
-            onRun?.();
+
+            // Only execute if either save was successful or user confirmed to proceed
+            if (saveSuccess && onRun) {
+                onRun();
+            }
         } finally {
             setIsRunning(false);
         }
@@ -128,18 +137,18 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
     // Enhanced close handler with save
     const handleClose = useCallback(async () => {
         const saveSuccess = await handleSave();
-        // if (hasUnsavedChanges) {
-        //     const shouldSave = window.confirm('Do you want to save your changes before closing?');
-        //     if (shouldSave) {
-        //         const saveSuccess = await handleSave();
-        //         if (!saveSuccess) {
-        //             const forcedClose = window.confirm('Failed to save changes. Close anyway?');
-        //             if (!forcedClose) return;
-        //         }
-        //     }
-        // }
+        if (hasUnsavedChanges) {
+            const shouldSave = window.confirm('Do you want to save your changes before closing?');
+            if (shouldSave) {
+                const saveSuccess = await handleSave();
+                if (!saveSuccess) {
+                    const forcedClose = window.confirm('Failed to save changes. Close anyway?');
+                    if (!forcedClose) return;
+                }
+            }
+        }
         onClose();
-    }, [hasUnsavedChanges, handleSave, onClose]);
+    }, []);
 
     const handleCopy = useCallback(() => {
         navigator.clipboard.writeText(content);
@@ -268,7 +277,7 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
                         <DocumentationPanel
                             customization={customization}
                             fileName={fileName}
-                            isFromIDE={true} 
+                            isFromIDE={true}
                             blockId={blockid}
                         />
                         <TestingPanel customization={customization} code={content} fileName={fileName}
@@ -278,124 +287,19 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
                 )}
 
                 {/* Main editor */}
-                <div className="flex-1 rounded-lg shadow-2xl overflow-hidden transform transition-all"
-                    style={{
-                        backgroundColor: customization.backgroundColor,
-                        border: `1px solid ${customization.highlightColor}20`
-                    }}>
-                    {/* Header */}
-                    <div className="flex justify-between items-center px-4 py-3 border-b"
-                        style={{
-                            backgroundColor: `${customization.highlightColor}10`,
-                            borderColor: `${customization.textColor}10`
-                        }}>
-                        <div className="flex items-center gap-3">
-                            <span className="font-medium" style={{ color: customization.textColor }}>
-                                {fileName}
-                            </span>
-                            {hasUnsavedChanges && (
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">
-                                    Unsaved changes
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {/* <button
-                                onClick={handleRun}
-                                disabled={isRunning}
-                                className="p-2 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2"
-                                style={{
-                                    color: customization.textColor,
-                                    opacity: isRunning ? 0.5 : 1
-                                }}>
-                                {isRunning ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-                                <span className="text-sm">{isRunning ? 'Running...' : 'Run'}</span>
-                            </button> */}
-                            <button
-                                onClick={handleCopy}
-                                className="p-2 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2"
-                                style={{ color: customization.textColor }}>
-                                <Copy size={16} />
-                                <span className="text-sm">Copy</span>
-                            </button>
-                            {/* <button
-                                onClick={() => setShowSettings(!showSettings)}
-                                className="p-2 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2"
-                                style={{ color: customization.textColor }}>
-                                <Settings size={16} />
-                                <span className="text-sm">Settings</span>
-                                <ChevronDown
-                                    size={14}
-                                    className={`transition-transform ${showSettings ? 'rotate-180' : ''}`}
-                                />
-                            </button> */}
-                            <button
-                                onClick={handleSave}
-                                disabled={isSaving || !hasUnsavedChanges}
-                                className="px-3 py-1.5 rounded flex items-center gap-2"
-                                style={{
-                                    backgroundColor: customization.highlightColor,
-                                    color: 'white',
-                                    opacity: (!hasUnsavedChanges || isSaving) ? 0.5 : 1
-                                }}>
-                                {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                                <span>{isSaving ? 'Saving...' : 'Save'}</span>
-                            </button>
-                            <button
-                                onClick={handleClose}
-                                className="p-2 rounded hover:bg-white/5"
-                                style={{ color: customization.textColor }}>
-                                <X size={18} />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Settings Panel */}
-                    {showSettings && (
-                        <div className="p-4 border-b"
-                            style={{
-                                backgroundColor: `${customization.highlightColor}05`,
-                                borderColor: `${customization.textColor}10`
-                            }}>
-                            <div className="flex gap-6">
-                                <div className="flex items-center gap-2">
-                                    <label className="text-sm" style={{ color: customization.textColor }}>
-                                        Font Size:
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={fontSize}
-                                        onChange={(e) => handleFontSizeChange(Number(e.target.value))}
-                                        className="w-16 px-2 py-1 rounded bg-black/20 border border-white/10"
-                                        style={{ color: customization.textColor }}
-                                        min={10}
-                                        max={24}
-                                    />
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <label className="text-sm" style={{ color: customization.textColor }}>
-                                        Tab Size:
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={tabSize}
-                                        onChange={(e) => handleTabSizeChange(Number(e.target.value))}
-                                        className="w-16 px-2 py-1 rounded bg-black/20 border border-white/10"
-                                        style={{ color: customization.textColor }}
-                                        min={2}
-                                        max={8}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Editor Content */}
-                    <div className="relative" style={{ height: 'calc(90vh - 56px)' }}>
-                        <div ref={editorRef} className="h-full w-full" />
-                    </div>
-                </div>
-
+                <MainEditor
+                    code={content}
+                    fileName={fileName}
+                    customization={customization}
+                    onSave={async (newContent) => {
+                        if (onCodeChange) {
+                            await onCodeChange(newContent);
+                        }
+                    }}
+                    onClose={handleClose}
+                    onCopy={handleCopy}
+                    onRun={onRun}
+                />
                 {/* Right side panels */}
                 {panelsVisible && (
                     <div className="w-80 flex flex-col gap-4">

@@ -1,10 +1,11 @@
-import  Home  from './Home';
+import { useState, useEffect } from 'react';
+import Home from './Home';
 import AISetup from './ai_integration/AISetup';
-import { executeOllama, checkOllamaAPI } from './ai_integration/executeOllama';
+import { executeOllamaStreaming, checkOllamaAPI } from './ai_integration/executeOllama';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import IDEHome from './IDEHome';
 
-// Test Ollama function
+// Test Ollama function with streaming support
 const testOllama = async () => {
   try {
     // First check if Ollama API is accessible
@@ -18,16 +19,30 @@ const testOllama = async () => {
     console.log('📝 Sending request to Ollama...');
     console.log('💭 Prompt: Create a sample Python program that demonstrates object-oriented programming');
 
-    const result = await executeOllama(
-      'Create a sample Python program that demonstrates object-oriented programming'
+    let responseText = '';
+    console.log('Response streaming:');
+    console.log('----------------------------');
+
+    const result = await executeOllamaStreaming(
+      'Create a sample Python program that demonstrates object-oriented programming',
+      // Token callback - called for each new piece of the response
+      (token) => {
+        process.stdout.write(token); // This will print without newlines
+        responseText += token;
+      },
+      // Complete callback - called when the response is finished
+      (fullResponse) => {
+        console.log('\n----------------------------');
+        console.log('✅ Full response received:');
+        console.log(fullResponse);
+      },
+      // Error callback
+      (error) => {
+        console.error('❌ Error:', error);
+      }
     );
 
-    if (result.success) {
-      console.log('✅ Response received successfully:');
-      console.log('----------------------------');
-      console.log(result.data);
-      console.log('----------------------------');
-    } else {
+    if (!result.success) {
       console.error('❌ Error:', result.error);
     }
   } catch (error) {
@@ -35,10 +50,18 @@ const testOllama = async () => {
   }
 };
 
-// Execute the test immediately
-testOllama();
-
 function App() {
+  // State to track whether we've run the test
+  const [hasRunTest, setHasRunTest] = useState(false);
+
+  useEffect(() => {
+    // Only run the test once when the component mounts
+    if (!hasRunTest) {
+      testOllama();
+      setHasRunTest(true);
+    }
+  }, [hasRunTest]);
+
   return (
     <Router>
       <Routes>

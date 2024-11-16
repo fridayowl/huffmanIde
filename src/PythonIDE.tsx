@@ -7,7 +7,7 @@ import { useCursorManagement } from './useCursorManagement';
 import { useKeyboardHandlers } from './useKeyboardHandlers';
 import type { PythonIDEProps, PythonIDEHandle } from './types';
 import { standardizePythonCharacters } from './standardizePythonCharacters';
-import IDEDialog from './IDEDialog';
+import IDEDialog from './IDEDialog/IDEDialog';
 
 
 const LINE_HEIGHT = 20;
@@ -22,7 +22,7 @@ const PythonIDE = forwardRef<PythonIDEHandle, PythonIDEProps>(({
     fileName,
     onFlowVisibilityChange,
     customization: propCustomization,
-    onClose, 
+    onClose,
 }, ref) => {
     // Refs
     const editorRef = useRef<HTMLDivElement>(null);
@@ -42,14 +42,14 @@ const PythonIDE = forwardRef<PythonIDEHandle, PythonIDEProps>(({
         contentHeight,
         setContentHeight,
         showExecutionPanel,
-        setShowExecutionPanel, 
+        setShowExecutionPanel,
     } = usePythonIDEState(fileContent, propCustomization);
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
 
     // Update the key to reload
-   
+
     const handleHeaderClick = useCallback(() => {
         setIsDialogOpen(true);
     }, []);
@@ -175,16 +175,16 @@ const PythonIDE = forwardRef<PythonIDEHandle, PythonIDEProps>(({
 
         setLastTap(now);
     }, [lastTap]);
-    
+
     // Utility functions
     const updateContentHeight = useCallback((text: string) => {
         const lines = text.split('\n').length;
-        setContentHeight((lines + EXTRA_LINES) * LINE_HEIGHT + HEADER_HEIGHT + BOTTOM_PADDING + 80 );
+        setContentHeight((lines + EXTRA_LINES) * LINE_HEIGHT + HEADER_HEIGHT + BOTTOM_PADDING + 80);
     }, [setContentHeight]);
 
     // Effect to update content when file changes
     useEffect(() => {
-       
+
         if (fileContent !== null) {
             const standardizedContent = standardizePythonCharacters(fileContent);
             setContent(standardizedContent);
@@ -211,15 +211,15 @@ const PythonIDE = forwardRef<PythonIDEHandle, PythonIDEProps>(({
 
     }, [isFlowVisible, onFlowVisibilityChange, setIsFlowVisible]);
 
- 
+
     const handleIDEDialogSave = useCallback((newContent: string) => {
         try {
-             
+
             // First, update the file in localStorage
             if (fileName) {
                 // Store the new content in localStorage with the file_ prefix
                 localStorage.setItem(`file_${fileName}`, newContent);
-               
+
                 // Also update any related stored documentation
                 const docFileName = `${fileName}.documentation.json`;
                 const existingDocs = localStorage.getItem(docFileName);
@@ -254,19 +254,19 @@ const PythonIDE = forwardRef<PythonIDEHandle, PythonIDEProps>(({
             // Update content height to accommodate new content
             updateContentHeight(newContent);
             onFlowVisibilityChange(false);
-            
-           setRefreshKey(prev => prev +1 )
+
+            setRefreshKey(prev => prev + 1)
             return true; // Indicate successful save
-            
+
         } catch (error) {
             console.error('Error saving file content:', error);
             return false; // Indicate failed save
         }
-    }, [fileName, onCodeChange, onBlockCodeChange, setContent, setEditBuffer, updateContentHeight, getCursorPosition]); 
-    
+    }, [fileName, onCodeChange, onBlockCodeChange, setContent, setEditBuffer, updateContentHeight, getCursorPosition]);
+
     useEffect(() => {
-            onFlowVisibilityChange(true);
-        
+        onFlowVisibilityChange(true);
+
     }, [refreshKey, fileContent, updateContentHeight]);
     return (
         <div
@@ -307,30 +307,30 @@ const PythonIDE = forwardRef<PythonIDEHandle, PythonIDEProps>(({
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 
                               transition-all duration-300 pointer-events-none" />
 
-            <EditorCore
-                editorRef={editorRef} 
-                content={content}  
-                lineHeight={LINE_HEIGHT}
-                contentHeight={contentHeight}
-                headerHeight={HEADER_HEIGHT}
-                customization={localCustomization}
-            />
+                <EditorCore
+                    editorRef={editorRef}
+                    content={content}
+                    lineHeight={LINE_HEIGHT}
+                    contentHeight={contentHeight}
+                    headerHeight={HEADER_HEIGHT}
+                    customization={localCustomization}
+                />
 
 
-            {showExecutionPanel && (
-                <div className="border-t border-gray-700">
-                    <ExecutePython
-                        fileName={fileName}
-                        currentCode={content}
-                        onClose={() => setShowExecutionPanel(false)}
-                        customization={{
-                            backgroundColor: localCustomization.backgroundColor,
-                            textColor: localCustomization.textColor,
-                            highlightColor: localCustomization.highlightColor
-                        }}
-                    />
-                </div>
-            )}
+                {showExecutionPanel && (
+                    <div className="border-t border-gray-700">
+                        <ExecutePython
+                            fileName={fileName}
+                            currentCode={content}
+                            onClose={() => setShowExecutionPanel(false)}
+                            customization={{
+                                backgroundColor: localCustomization.backgroundColor,
+                                textColor: localCustomization.textColor,
+                                highlightColor: localCustomization.highlightColor
+                            }}
+                        />
+                    </div>
+                )}
             </div>
             {isDialogOpen && (
                 <IDEDialog
