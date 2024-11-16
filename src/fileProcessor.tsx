@@ -45,7 +45,7 @@ export async function generateJsonFromPythonFile(fileContent: string, name: stri
     const HORIZONTAL_OFFSET = 650; // Increased to leave space for the IDE
     allBlocks.forEach((block, index) => {
         block.x = HORIZONTAL_OFFSET;
-        block.y = 50 + index * VERTICAL_SPACING;
+        block.y = 70 + index * VERTICAL_SPACING;
     });
 
     return allBlocks;

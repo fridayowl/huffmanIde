@@ -18,6 +18,11 @@
         "open": true,
         "save": true
       },
+      "http": {
+        "all": false,
+        "request": true,
+        "scope": ["http://localhost:11434/*"]
+      },
       "shell": {
         "all": true,
         "execute": true,

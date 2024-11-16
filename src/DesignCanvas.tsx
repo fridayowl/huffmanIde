@@ -16,6 +16,7 @@ import customTemplates from './customTemplates';
 import CanvasContainer from './CanvasContainer';
 import { listen } from '@tauri-apps/api/event';
 import { window as tauriWindow } from '@tauri-apps/api';
+import OllamaStatusButton from './ai_integration/OllamaStatusButton';
 
 
 interface CanvasData {
@@ -385,8 +386,12 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
 
                     <span className="ml-4 text-gray-400">Zoom: {Math.round(zoomLevel * 100)}%</span>
                 </div>
+ 
+
 
                 <div className="flex items-center gap-2">
+
+                    <OllamaStatusButton/>
                     <ShareFlow canvasRef={canvasRef} />
 
                     {/* Primary blue buttons - using the same blue shade as in the UI */}

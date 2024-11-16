@@ -20,3 +20,16 @@ Good use of environment variables but could be improved by removing all hardcode
 Score: 10/15
 Total Score:
 65/100 
+
+
+
+Auto Documentation 
+
+
+Auto  Testing 
+
+
+
+LLAMA - PAge 
+
+Community page 
