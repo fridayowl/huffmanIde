@@ -25,9 +25,50 @@ const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     useEffect(() => {
-        // Automatically focus the textarea when the component mounts
         textareaRef.current?.focus();
     }, []);
+
+    const formatCodeResponse = (response: string): string => {
+        try {
+            // Try to parse as JSON first
+            const responseObj = JSON.parse(response);
+            if (responseObj.code) {
+                // Clean up the code part
+                return responseObj.code
+                    .replace(/\\n/g, '\n')  // Replace escaped newlines
+                    .replace(/^```python\n|```$/g, '')  // Remove code block markers if present
+                    .trim();
+            }
+            if (responseObj.python_code) {
+                // Clean up the code part
+                return responseObj.code
+                    .replace(/\\n/g, '\n')  // Replace escaped newlines
+                    .replace(/^```python\n|```$/g, '')  // Remove code block markers if present
+                    .trim();
+            }
+        } catch (e) {
+            // If not valid JSON, clean up the raw text
+        }
+
+        // Remove any JSON-like wrapper content
+        const lines = response.split('\n');
+        const cleanedLines = lines
+            .filter(line => {
+                const trimmed = line.trim();
+                return !(
+                    trimmed.startsWith('{') ||
+                    trimmed.startsWith('}') ||
+                    trimmed.includes('"thoughts":') ||
+                    trimmed.includes('"code":') ||
+                    trimmed.includes('"solutions":') ||
+                    !trimmed
+                );
+            })
+            .map(line => line.trim())
+            .filter(line => line);
+
+        return cleanedLines.join('\n');
+    };
 
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
@@ -46,27 +87,21 @@ const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
             let generatedCode = '';
 
             await executeOllamaStreaming(
-                prompt,
+                `Generate Python code for: ${prompt}. Return only the Python code without any explanations or JSON formatting.`,
                 (token) => {
-                    console.log(token);
+                    console.log('Token:', token);
                     generatedCode += token;
                 },
                 (fullResponse) => {
-                    console.log('\n----------------------------');
-                    console.log('✅ Full response received:');
-                    console.log(fullResponse);
+                    console.log('✅ Full response received:', fullResponse);
+                    const formattedCode = formatCodeResponse(fullResponse);
+                    console.log('Formatted code:', formattedCode);
+                    onCodeGenerated(formattedCode);
                 },
                 (error) => {
                     console.error('❌ Error:', error);
                 }
             );
-
-            if (generatedCode) {
-                console.log("generated code",generatedCode)
-                console.log("generated code", typeof(generatedCode))
-
-                onCodeGenerated(generatedCode);
-            }
         } catch (error: unknown) {
             if (error instanceof Error) {
                 setError(error.message || 'Failed to generate code');
@@ -86,7 +121,6 @@ const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
                 borderColor: `${customization.textColor}20`,
             }}
         >
-            {/* Header */}
             <div
                 className="p-3 border-b flex justify-between items-center"
                 style={{
@@ -96,7 +130,7 @@ const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
                 <div className="flex items-center gap-2">
                     <Wand2 size={16} className="text-indigo-400" />
                     <span className="font-medium" style={{ color: customization.textColor }}>
-                        Generate Code
+                        Generate Python Code
                     </span>
                 </div>
                 <button
@@ -108,13 +142,12 @@ const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
                 </button>
             </div>
 
-            {/* Content */}
             <div className="p-4 space-y-4">
                 <textarea
                     ref={textareaRef}
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe the code you want to generate..."
+                    placeholder="Describe the Python code you want to generate..."
                     className="w-full p-3 rounded-lg resize-none focus:ring-2 focus:outline-none"
                     style={{
                         backgroundColor: `${customization.highlightColor}10`,

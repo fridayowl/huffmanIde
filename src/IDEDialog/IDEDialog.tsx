@@ -10,7 +10,7 @@ import { keymap } from '@codemirror/view';
 import { indentWithTab } from '@codemirror/commands';
 
 import TestingPanel from '../TestingPanel';
-import { RunPanel } from '../RunButtonPanel';
+import { RunPanel } from './RunButtonPanel';
 import { AnalyticsPanel } from '../AnalyticsPanel';
 import { DocumentationPanel } from '../DocumentationPanel';
 import MainEditor from './MainEditor';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, XCircle, Terminal, X, Download, Loader2, RefreshCw, Copy } from 'lucide-react';
-import { pythonExecutor, ExecutionResult } from './pythonExecutor';
+import { pythonExecutor, ExecutionResult } from '../pythonExecutor';
 
 interface RunPanelProps {
     code?: string | null;
