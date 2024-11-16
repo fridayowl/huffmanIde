@@ -62,6 +62,9 @@ const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
             );
 
             if (generatedCode) {
+                console.log("generated code",generatedCode)
+                console.log("generated code", typeof(generatedCode))
+
                 onCodeGenerated(generatedCode);
             }
         } catch (error: unknown) {
