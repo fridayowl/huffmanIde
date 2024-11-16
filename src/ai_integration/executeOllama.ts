@@ -1,7 +1,6 @@
-// executeOllama.ts
+import { ModelInfo } from './types';
 import { fetch, Body, ResponseType } from '@tauri-apps/api/http';
 
-// Types
 interface ModelParameters {
     temperature?: number;
     top_k?: number;
@@ -31,33 +30,62 @@ interface ExecuteOllamaResult {
 }
 
 /**
- * Executes a prompt against the Ollama API
- * @param modelName - Name of the model to use
+ * Gets the stored model information from localStorage
+ * @returns ModelInfo | null
+ */
+const getModelInfo = (): ModelInfo | null => {
+    try {
+        const storedInfo = localStorage.getItem('Model_Info');
+        if (!storedInfo) {
+            return null;
+        }
+        const parsedInfo: ModelInfo = JSON.parse(storedInfo);
+        return parsedInfo;
+    } catch (error) {
+        console.error('Failed to retrieve model info from localStorage:', error);
+        return null;
+    }
+};
+
+/**
+ * Executes a prompt against the Ollama API using stored model information
  * @param prompt - The prompt to send to the model
- * @param parameters - Optional model parameters
  * @param format - Optional response format (default: "json")
  * @returns Promise<ExecuteOllamaResult>
  */
 export async function executeOllama(
-    modelName: string,
     prompt: string,
-    parameters?: ModelParameters,
     format: string = "json"
 ): Promise<ExecuteOllamaResult> {
-    if (!modelName || !prompt.trim()) {
+    // Get model info from storage
+    const modelInfo = getModelInfo();
+    
+    if (!modelInfo) {
         return {
             success: false,
-            error: "Model name and prompt are required"
+            error: "No model information found in storage"
+        };
+    }
+
+    if (!prompt.trim()) {
+        return {
+            success: false,
+            error: "Prompt is required"
         };
     }
 
     try {
         const requestBody: OllamaRequest = {
-            model: modelName,
+            model: modelInfo.selectedModel.name,
             prompt: prompt,
             format,
             stream: false,
-            parameters
+            parameters: {
+                temperature: modelInfo.selectedModel.parameters?.temperature,
+                top_k: modelInfo.selectedModel.parameters?.top_k,
+                top_p: modelInfo.selectedModel.parameters?.top_p,
+                max_tokens: modelInfo.selectedModel.parameters?.max_tokens
+            }
         };
 
         const response = await fetch('http://localhost:11434/api/generate', {

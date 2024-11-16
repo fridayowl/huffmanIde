@@ -1,7 +1,6 @@
-// App.tsx
-import { Home } from 'lucide-react';
+import  Home  from './Home';
 import AISetup from './ai_integration/AISetup';
-import { executeOllama, checkOllamaAPI } from './ai_integration/executeOllama'
+import { executeOllama, checkOllamaAPI } from './ai_integration/executeOllama';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import IDEHome from './IDEHome';
 
@@ -16,22 +15,11 @@ const testOllama = async () => {
       return;
     }
 
-    // Test parameters
-    const modelName = 'qwen2.5-coder';
-    const prompt = 'Create a sample Python program that demonstrates object-oriented programming';
-    const parameters = {
-      temperature: 0.7,
-      max_tokens: 2048
-    };
-
     console.log('📝 Sending request to Ollama...');
-    console.log('🤖 Model:', modelName);
-    console.log('💭 Prompt:', prompt);
+    console.log('💭 Prompt: Create a sample Python program that demonstrates object-oriented programming');
 
     const result = await executeOllama(
-      modelName,
-      prompt,
-      parameters
+      'Create a sample Python program that demonstrates object-oriented programming'
     );
 
     if (result.success) {
