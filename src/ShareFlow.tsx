@@ -54,7 +54,7 @@ const ShareFlow: React.FC<ShareFlowProps> = ({ canvasRef }) => {
             <button
                 onClick={handleShare}
                 className="group relative px-3 py-2 bg-blue-600 text-white rounded-lg overflow-hidden hover:-translate-y-0.5 transition-all duration-300"
-                title="Share Flow"
+                title="Share"
             >
                 {/* Gradient overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -65,7 +65,7 @@ const ShareFlow: React.FC<ShareFlowProps> = ({ canvasRef }) => {
                 {/* Button content */}
                 <div className="relative z-10 flex items-center">
                     <Share2 size={16} className="mr-2" />
-                    <span className="text-sm">Share Flow</span>
+                    <span className="text-sm">Share</span>
                 </div>
             </button>
             {showComingSoon && (
