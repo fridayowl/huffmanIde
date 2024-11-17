@@ -30,46 +30,97 @@ const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
 
     const formatCodeResponse = (response: string): string => {
         try {
-            // Try to parse as JSON first
+            // First try to parse as JSON
             const responseObj = JSON.parse(response);
-            if (responseObj.code) {
-                // Clean up the code part
-                return responseObj.code
-                    .replace(/\\n/g, '\n')  // Replace escaped newlines
-                    .replace(/^```python\n|```$/g, '')  // Remove code block markers if present
-                    .trim();
-            }
-            if (responseObj.python_code) {
-                // Clean up the code part
-                return responseObj.code
-                    .replace(/\\n/g, '\n')  // Replace escaped newlines
-                    .replace(/^```python\n|```$/g, '')  // Remove code block markers if present
-                    .trim();
+            if (responseObj.code || responseObj.python_code) {
+                const codeContent = responseObj.code || responseObj.python_code;
+                return formatPythonCode(
+                    codeContent
+                        .replace(/\\n/g, '\n')
+                        .replace(/^```python\n|```$/g, '')
+                        .trim()
+                );
             }
         } catch (e) {
-            // If not valid JSON, clean up the raw text
+            // If not JSON, clean up the raw text
         }
 
-        // Remove any JSON-like wrapper content
-        const lines = response.split('\n');
-        const cleanedLines = lines
-            .filter(line => {
-                const trimmed = line.trim();
-                return !(
-                    trimmed.startsWith('{') ||
-                    trimmed.startsWith('}') ||
-                    trimmed.includes('"thoughts":') ||
-                    trimmed.includes('"code":') ||
-                    trimmed.includes('"solutions":') ||
-                    !trimmed
-                );
-            })
-            .map(line => line.trim())
-            .filter(line => line);
-
-        return cleanedLines.join('\n');
+        // Clean up raw text response
+        return formatPythonCode(
+            response
+                .replace(/^```python\n|```$/g, '')  // Remove code block markers
+                .split('\n')
+                .filter(line => {
+                    const trimmed = line.trim();
+                    return !(
+                        trimmed.startsWith('{') ||
+                        trimmed.startsWith('}') ||
+                        trimmed.includes('"thoughts":') ||
+                        trimmed.includes('"code":') ||
+                        trimmed.includes('"solutions":')
+                    );
+                })
+                .join('\n')
+                .trim()
+        );
     };
 
+    const formatPythonCode = (code: string): string => {
+        const lines = code.split('\n');
+        const formattedLines: string[] = [];
+        let indentLevel = 0;
+        const INDENT = '    '; // 4 spaces for Python
+
+        for (let line of lines) {
+            const trimmedLine = line.trim();
+
+            // Skip empty lines but preserve them
+            if (!trimmedLine) {
+                formattedLines.push('');
+                continue;
+            }
+
+            // Decrease indent for lines starting with specific keywords
+            if (trimmedLine.startsWith('elif ') ||
+                trimmedLine.startsWith('else:') ||
+                trimmedLine.startsWith('except ') ||
+                trimmedLine.startsWith('finally:') ||
+                (trimmedLine.startsWith('return ') && !trimmedLine.endsWith(':')) ||
+                (trimmedLine.startsWith('class ') && trimmedLine.includes('(')) ||
+                (trimmedLine.startsWith('def ') && !trimmedLine.startsWith('def __'))) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+
+            // Special handling for nested class definitions
+            if (trimmedLine.startsWith('class ') && !trimmedLine.includes('(')) {
+                formattedLines.push(INDENT.repeat(indentLevel) + trimmedLine);
+                indentLevel += 1;
+                continue;
+            }
+
+            // Add the line with proper indentation
+            formattedLines.push(INDENT.repeat(indentLevel) + trimmedLine);
+
+            // Increase indent after lines ending with ':'
+            if (trimmedLine.endsWith(':')) {
+                indentLevel += 1;
+            }
+            // Handle method definitions
+            else if (trimmedLine.startsWith('def ')) {
+                if (!trimmedLine.endsWith(':')) {
+                    indentLevel = Math.max(0, indentLevel - 1);
+                }
+            }
+            // Decrease indent after standalone return/break/continue statements
+            else if (trimmedLine.startsWith('return ') ||
+                trimmedLine === 'break' ||
+                trimmedLine === 'continue') {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+        }
+
+        return formattedLines.join('\n');
+    };
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
 
@@ -89,17 +140,14 @@ const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
             await executeOllamaStreaming(
                 `Generate Python code for: ${prompt}. Return only the Python code without any explanations or JSON formatting.`,
                 (token) => {
-                    console.log('Token:', token);
                     generatedCode += token;
                 },
                 (fullResponse) => {
-                    console.log('✅ Full response received:', fullResponse);
                     const formattedCode = formatCodeResponse(fullResponse);
-                    console.log('Formatted code:', formattedCode);
                     onCodeGenerated(formattedCode);
                 },
                 (error) => {
-                    console.error('❌ Error:', error);
+                    setError(error);
                 }
             );
         } catch (error: unknown) {

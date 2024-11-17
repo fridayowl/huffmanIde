@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
 import { checkOllamaStatus, OllamaStatus } from './ollamaStatus';
 import {
     Brain,
@@ -9,15 +8,51 @@ import {
     Power,
     Info,
     Settings,
-    ChevronDown
+    ChevronDown,
+    X
 } from 'lucide-react';
+import AISetup from './AISetup';
 
 const OllamaStatusButton = () => {
-    const navigate = useNavigate();
     const [status, setStatus] = useState<OllamaStatus | null>(null);
     const [isChecking, setIsChecking] = useState(true);
     const [showDetails, setShowDetails] = useState(false);
     const [selectedModel, setSelectedModel] = useState<string | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const detailsRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setIsDialogOpen(false);
+            }
+        };
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dialogRef.current && !dialogRef.current.contains(event.target as Node)) {
+                setIsDialogOpen(false);
+            }
+            if (detailsRef.current && !detailsRef.current.contains(event.target as Node)) {
+                setShowDetails(false);
+            }
+        };
+
+        if (isDialogOpen || showDetails) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEscape);
+        }
+
+        if (isDialogOpen) {
+            document.body.style.overflow = 'hidden';
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+            document.body.style.overflow = 'unset';
+        };
+    }, [isDialogOpen, showDetails]);
 
     const checkStatus = async () => {
         setIsChecking(true);
@@ -25,7 +60,6 @@ const OllamaStatusButton = () => {
             const ollamaStatus = await checkOllamaStatus();
             setStatus(ollamaStatus);
 
-            // Get the selected model from localStorage or use the first available model
             const storedModel = localStorage.getItem('selectedOllamaModel');
             if (storedModel && ollamaStatus.installedModels.includes(storedModel)) {
                 setSelectedModel(storedModel);
@@ -93,7 +127,6 @@ const OllamaStatusButton = () => {
     };
 
     const config = getStatusConfig();
-    const IconComponent = config.icon;
 
     return (
         <div className="relative">
@@ -122,7 +155,7 @@ const OllamaStatusButton = () => {
                 </button>
 
                 <button
-                    onClick={() => navigate('/aisetup')}
+                    onClick={() => setIsDialogOpen(true)}
                     className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl"
                     title="AI Settings"
                 >
@@ -130,8 +163,12 @@ const OllamaStatusButton = () => {
                 </button>
             </div>
 
+            {/* Details Dropdown */}
             {showDetails && status && (
-                <div className="absolute top-full mt-2 w-72 p-4 bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-700">
+                <div
+                    ref={detailsRef}
+                    className="absolute top-full mt-2 w-72 p-4 bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-700"
+                >
                     <div className="space-y-4">
                         {/* Status Section */}
                         <div className="space-y-2">
@@ -166,8 +203,8 @@ const OllamaStatusButton = () => {
                                         key={model}
                                         onClick={() => handleModelSelect(model)}
                                         className={`w-full px-3 py-2 rounded-lg text-left transition-all duration-200 ${selectedModel === model
-                                                ? 'bg-green-600/20 text-green-400'
-                                                : 'hover:bg-gray-700/50 text-gray-300'
+                                            ? 'bg-green-600/20 text-green-400'
+                                            : 'hover:bg-gray-700/50 text-gray-300'
                                             }`}
                                     >
                                         <div className="flex items-center justify-between">
@@ -187,6 +224,31 @@ const OllamaStatusButton = () => {
                                 <p className="text-red-400 text-sm">{status.error}</p>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Settings Dialog */}
+            {isDialogOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40">
+                    <div className="fixed inset-4 z-50 flex items-center justify-center">
+                        <div
+                            ref={dialogRef}
+                            className="bg-gray-900 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+                        >
+                            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+                                <h2 className="text-xl font-semibold text-white">AI Model Setup</h2>
+                                <button
+                                    onClick={() => setIsDialogOpen(false)}
+                                    className="p-1 hover:bg-gray-700 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto">
+                                <AISetup />
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

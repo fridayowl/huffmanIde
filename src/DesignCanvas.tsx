@@ -68,76 +68,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
         selectedFileName: Array.isArray(canvases) ? canvases[0]?.fileName : canvases?.fileName,
         onCodeChange,
     });
-   // const [canvasManagers, setCanvasManagers] = useState<CanvasManagerState>({});
-    // useEffect(() => {
-    //     const managers: CanvasManagerState = {};
-
-    //     if (Array.isArray(canvases)) {
-    //         canvases.forEach((canvas, index) => {
-    //             const key = canvas.fileName || `canvas-${index}`;
-    //             managers[key] = {
-    //                 ...baseManager,
-    //                 blocks: [], // Initialize with empty values
-    //                 connections: [],
-    //                 ideContent: canvas.fileContent,
-    //                 // Add other necessary overrides
-    //             };
-    //         });
-    //     } else if (canvases) {
-    //         const key = canvases.fileName || 'single-canvas';
-    //         managers[key] = {
-    //             ...baseManager,
-    //             ideContent: canvases.fileContent,
-    //         };
-    //     }
-
-    //     setCanvasManagers(managers);
-    //     console.log("Canvas Managers:", managers);
-    // }, [canvases, baseManager]);
-    // Initialize canvas managers state
-    // const [canvasManagers, setCanvasManagers] = useState<CanvasManagerState>(() => {
-    //     const initialManagers: CanvasManagerState = {};
-
-    //     if (Array.isArray(canvases)) {
-    //         canvases.forEach((canvas) => {
-    //             const key = canvas.fileName || `canvas-${canvas.id}`;
-    //             initialManagers[key] = {
-    //                 blocks: [],
-    //                 connections: [],
-    //                 pythonIDERef: React.createRef<PythonIDEHandle>(),
-    //                 refreshKey: 0,
-    //                 isFlowVisible: true,
-    //                 zoomLevel: baseManager.zoomLevel,
-    //                 canvasSize: baseManager.canvasSize,
-    //                 idePosition: baseManager.idePosition,
-    //                 ideContent: canvas.fileContent,
-    //                 activeTestingPanel: null,
-    //                 selectedBlockId: null,
-    //                 handlePositionChange: baseManager.handlePositionChange,
-    //                 handleConnectionVisibilityChange: baseManager.handleConnectionVisibilityChange,
-    //                 handleCodeChange: baseManager.handleCodeChange,
-    //                 handleBlockCodeChange: baseManager.handleBlockCodeChange,
-    //                 handleBlockSelect: baseManager.handleBlockSelect,
-    //                 handleBlockVisibilityToggle: baseManager.handleBlockVisibilityToggle,
-    //                 handleBlockWidthChange: baseManager.handleBlockWidthChange,
-    //                 getVisibleBlocks:baseManager.getVisibleBlocks,  
-    //                 getVisibleConnections: baseManager.getVisibleConnections,  
-    //                 setIsFlowVisible: baseManager.setIsFlowVisible,
-    //                 handleTestingPanelChange: baseManager.handleTestingPanelChange,
-    //             };
-    //         });
-    //     } else if (canvases) {
-    //         const key = canvases.fileName || 'single-canvas';
-    //         initialManagers[key] = {
-    //             ...baseManager,
-    //             ideContent: canvases.fileContent,
-    //         };
-    //     }
-
-    //     return initialManagers;
-    // });
-    // // Create individual manager for each canvas
-     
+    
     const canvasManagers = useMemo(() => {
         const managers: CanvasManagerState = {};
 

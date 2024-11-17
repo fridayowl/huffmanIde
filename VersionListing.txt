@@ -225,6 +225,7 @@ Version 3.1
         - code generation( make it better )
         - document generation (no ai because blocks keep on changeing  )
         - testing generation (no ai because blocks keep on changeingn )
+        - line  identification and generation
 
 
 

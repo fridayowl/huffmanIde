@@ -1,9 +1,9 @@
 // IDEDialog.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import TestingPanel from '../TestingPanel';
+import TestingPanel from './TestingPanel';
 import { RunPanel } from './RunButtonPanel';
-import { AnalyticsPanel } from '../AnalyticsPanel';
+import { AnalyticsPanel } from './AnalyticsPanel';
 import { DocumentationPanel } from './DocumentationPanel';
 import MainEditor from './MainEditor';
 
