@@ -10,6 +10,7 @@
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.34.2",
     "@dnd-kit/core": "^6.1.0",
+    "@react-three/drei": "^9.80.1",
     "@replit/codemirror-indentation-markers": "^6.2.0",
     "@replit/codemirror-minimap": "^0.5.2",
     "@testing-library/jest-dom": "^5.17.0",
@@ -20,6 +21,7 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@uiw/react-codemirror": "^4.23.6",
+    "@use-gesture/react": "^10.3.1",
     "genkitx-ollama": "^0.9.0",
     "html2canvas": "^1.4.1",
     "leaflet": "^1.9.4",
@@ -41,8 +43,7 @@
     "reactflow": "^11.11.4",
     "recharts": "^2.13.3",
     "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4",
-    "@react-three/drei": "^9.80.1"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
