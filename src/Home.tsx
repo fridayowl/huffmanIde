@@ -5,7 +5,9 @@ import {
     Settings, Share2, MessageCircle, Blocks, FileCode,
     GitBranch, TestTube, Brain, Workflow, Timer, Zap,
     Target, Activity, Cpu, Coffee, ChevronLeft, ChevronRight,
-    Bell, PlusCircle, PanelRightClose, Puzzle, Calendar
+    Bell, PlusCircle, PanelRightClose, Puzzle, Calendar,
+    ActivitySquare,
+    ActivitySquareIcon
 } from 'lucide-react';
 import { FaPython, FaReact } from 'react-icons/fa';
 import ComingSoon from './ComingSoon';
@@ -168,7 +170,12 @@ export default function Home() {
         {
             label: 'Start Coding',
             action: () => navigate('/ide'),
-            primary: true
+            primary: false
+        },
+        {
+            label: 'Health',
+            action: () => navigate('/health'),
+            primary: false
         },
         {
             label: 'Features',
@@ -185,6 +192,10 @@ export default function Home() {
         {
             label: 'Analytics',
             action: () => scrollToSection('analytics')
+        },
+        {
+            label: 'Community',
+            action: () => navigate('/community')
         }
     ];
     return (
@@ -235,24 +246,58 @@ export default function Home() {
                         Transform your coding experience with our innovative block-based approach.
                         Build faster, collaborate better, and ship with confidence.
                     </p>
-                    <div className="flex items-center justify-center gap-4 pt-4">
-                        <button
-                            onClick={() => navigate('/ide')}
-                            className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 
-                                text-white rounded-lg font-medium hover:from-indigo-600 
-                                hover:to-indigo-700 transition-all duration-300 
-                                shadow-lg hover:shadow-xl hover:shadow-indigo-500/20
-                                hover:-translate-y-0.5 transform
-                                flex items-center gap-2"
-                        >
-                            <Code className="w-5 h-5" />
-                            Start Coding Now
-                        </button>
-                        <button className="px-8 py-4 bg-gray-800/50 text-gray-300 rounded-lg 
-                            font-medium hover:bg-gray-800 transition-all duration-300
-                            hover:-translate-y-0.5 transform border border-gray-700/50">
-                            Watch Demo
-                        </button>
+                    <div className="space-y-8">
+                        <div className="flex items-center justify-center gap-4">
+                            <button
+                                onClick={() => navigate('/ide')}
+                                className="px-8 py-4 bg-gradient-to-r from-[#4F46E5] to-[#6366F1]
+                text-white rounded-lg font-medium 
+                hover:opacity-90
+                transition-all duration-300 
+                shadow-lg hover:shadow-xl hover:shadow-indigo-500/20
+                hover:-translate-y-0.5 transform
+                flex items-center gap-2"
+                            >
+                                <Code className="w-5 h-5" />
+                                Start Coding Now
+                            </button>
+                            <button
+                                onClick={() => navigate('/health')}
+                                className="px-8 py-4 bg-gradient-to-r from-[#9333EA] to-[#A855F7]
+                text-white rounded-lg font-medium 
+                hover:opacity-90
+                transition-all duration-300 
+                shadow-lg hover:shadow-xl hover:shadow-purple-500/20
+                hover:-translate-y-0.5 transform
+                flex items-center gap-2"
+                            >
+                                <ActivitySquareIcon className="w-5 h-5" />
+                                Health Analytics
+                            </button>
+                            <button
+                                onClick={() => navigate('/community')}
+                                className="px-8 py-4 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]
+                text-white rounded-lg font-medium 
+                hover:opacity-90
+                transition-all duration-300 
+                shadow-lg hover:shadow-xl hover:shadow-purple-500/20
+                hover:-translate-y-0.5 transform
+                flex items-center gap-2"
+                            >
+                                <Users className="w-5 h-5" />
+                                Join Community
+                            </button>
+                        </div>
+
+                        <div className="flex justify-center">
+                            <button
+                                className="px-8 py-4 bg-[#1E293B]/50 text-gray-300 rounded-lg 
+                font-medium hover:bg-[#1E293B]/70 transition-all duration-300
+                hover:-translate-y-0.5 transform border border-gray-700/50"
+                            >
+                                Watch Demo
+                            </button>
+                        </div>
                     </div>
                 </section>
 

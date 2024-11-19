@@ -1,17 +1,19 @@
-// MainEditor.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     X, Save, Settings, Download, Copy,
     Loader2, ChevronDown, Play, Wand2
 } from 'lucide-react';
 import { EditorView, basicSetup } from 'codemirror';
-import { Extension, EditorState, Compartment } from '@codemirror/state';
+import { Extension, EditorState, Compartment, StateField } from '@codemirror/state';
 import { python } from '@codemirror/lang-python';
 import { tags } from '@lezer/highlight';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { keymap } from '@codemirror/view';
 import { indentWithTab } from '@codemirror/commands';
+import { Diagnostic } from '@codemirror/lint';
 import CodeGenerationPanel from './CodeGenerationPanel';
+import { TimeMetricsTracker } from '../health_analytics/timeMetricsTracker';
+import { CodingMentalHealthTracker } from '../health_analytics/codingMentalHealthTracker';
 
 interface MainEditorProps {
     code?: string | null;
@@ -49,6 +51,14 @@ const syntaxHighlightingStyle = HighlightStyle.define([
 const fontSizeCompartment = new Compartment();
 const tabSizeCompartment = new Compartment();
 
+// Define diagnostic field for error tracking
+const diagnosticField = StateField.define<Diagnostic[]>({
+    create() { return []; },
+    update(diagnostics, tr) {
+        return diagnostics;
+    }
+});
+
 const MainEditor: React.FC<MainEditorProps> = ({
     code = '',
     fileName = 'Untitled',
@@ -70,24 +80,151 @@ const MainEditor: React.FC<MainEditorProps> = ({
 
     const editorRef = useRef<HTMLDivElement | null>(null);
     const editorViewRef = useRef<EditorView | null>(null);
+    const timeTrackerRef = useRef<TimeMetricsTracker | null>(null);
+    const mentalHealthTrackerRef = useRef<CodingMentalHealthTracker | null>(null);
 
     // Update content when prop changes
     useEffect(() => {
-        const newContent = code || ''; // Handle null case
-        if (newContent !== content) {
+        const newContent = code || '';
+        if (newContent !== content && editorViewRef.current) {
+            const transaction = editorViewRef.current.state.update({
+                changes: {
+                    from: 0,
+                    to: editorViewRef.current.state.doc.length,
+                    insert: newContent
+                }
+            });
+            editorViewRef.current.dispatch(transaction);
             setContent(newContent);
-            if (editorViewRef.current) {
-                const transaction = editorViewRef.current.state.update({
-                    changes: {
-                        from: 0,
-                        to: editorViewRef.current.state.doc.length,
-                        insert: newContent // Now guaranteed to be string
-                    }
-                });
-                editorViewRef.current.dispatch(transaction);
-            }
         }
     }, [code]);
+
+    // Initialize CodeMirror editor
+    useEffect(() => {
+        if (!editorRef.current || editorViewRef.current) return;
+
+        const customTheme = EditorView.theme({
+            '&': {
+                backgroundColor: customization.backgroundColor,
+                color: customization.textColor,
+                height: '100%',
+            },
+            '.cm-content': {
+                caretColor: customization.textColor,
+                fontFamily: 'JetBrains Mono, monospace',
+                padding: '1rem',
+            },
+            '.cm-gutters': {
+                backgroundColor: `${customization.highlightColor}20`,
+                color: customization.lineNumbersColor,
+                border: 'none',
+                paddingRight: '1rem',
+            },
+            '.cm-activeLineGutter': {
+                backgroundColor: 'transparent',
+                color: customization.textColor,
+            },
+            '.cm-activeLine': {
+                backgroundColor: `${customization.highlightColor}10`,
+            },
+            '.cm-matchingBracket': {
+                backgroundColor: `${customization.highlightColor}30`,
+                outline: 'none',
+            },
+            '.cm-selectionMatch': {
+                backgroundColor: `${customization.highlightColor}30`,
+            },
+            '.cm-cursor': {
+                borderLeftColor: customization.textColor,
+            },
+            '.cm-lineNumbers': {
+                minWidth: '3em',
+            },
+        });
+
+        const state = EditorState.create({
+            doc: content || undefined,
+            extensions: [
+                basicSetup,
+                python(),
+                customTheme,
+                syntaxHighlighting(syntaxHighlightingStyle),
+                EditorView.lineWrapping,
+                fontSizeCompartment.of(EditorView.theme({
+                    '.cm-content': { fontSize: `${fontSize}px` },
+                    '.cm-gutters': { fontSize: `${fontSize - 2}px` },
+                })),
+                tabSizeCompartment.of(EditorState.tabSize.of(tabSize)),
+                keymap.of([indentWithTab]),
+                diagnosticField,
+                EditorView.updateListener.of((update) => {
+                    if (update.docChanged) {
+                        // Handle content changes
+                        const newContent = update.state.doc.toString();
+                        setContent(newContent);
+                        onContentChange?.(newContent);
+                        setHasUnsavedChanges(true);
+
+                        // Update metrics
+                        timeTrackerRef.current?.recordKeystroke();
+                        if (mentalHealthTrackerRef.current) {
+                            mentalHealthTrackerRef.current.handleEditorUpdate(update);
+                        }
+                    }
+                }),
+            ],
+        });
+
+        const view = new EditorView({
+            state,
+            parent: editorRef.current,
+        });
+
+        editorViewRef.current = view;
+
+        // Initialize trackers
+        const trackerFileName = fileName || 'untitled';
+        timeTrackerRef.current = new TimeMetricsTracker(trackerFileName);
+        mentalHealthTrackerRef.current = new CodingMentalHealthTracker(view, trackerFileName);
+
+        return () => {
+            timeTrackerRef.current?.endSession();
+            mentalHealthTrackerRef.current?.cleanup();
+            view.destroy();
+            editorViewRef.current = null;
+        };
+    }, []);
+
+    // Update editor configuration when settings change
+    useEffect(() => {
+        if (!editorViewRef.current) return;
+
+        editorViewRef.current.dispatch({
+            effects: [
+                tabSizeCompartment.reconfigure(EditorState.tabSize.of(tabSize)),
+                fontSizeCompartment.reconfigure(EditorView.theme({
+                    '.cm-content': { fontSize: `${fontSize}px` },
+                    '.cm-gutters': { fontSize: `${fontSize - 2}px` },
+                }))
+            ]
+        });
+    }, [fontSize, tabSize]);
+
+    // Track window-level activity
+    useEffect(() => {
+        const handleActivity = () => {
+            timeTrackerRef.current?.recordActivity();
+            mentalHealthTrackerRef.current?.recordActivity();
+        };
+
+        window.addEventListener('mousemove', handleActivity);
+        window.addEventListener('mousedown', handleActivity);
+
+        return () => {
+            window.removeEventListener('mousemove', handleActivity);
+            window.removeEventListener('mousedown', handleActivity);
+        };
+    }, []);
 
     const handleCodeGenerated = useCallback((generatedCode: string) => {
         if (!editorViewRef.current) return;
@@ -164,113 +301,16 @@ const MainEditor: React.FC<MainEditorProps> = ({
         onClose();
     }, [hasUnsavedChanges, handleSave, onClose]);
 
-    // Initialize CodeMirror editor
-    
-    useEffect(() => {
-        if (!editorRef.current || editorViewRef.current) return;
-
-        const customTheme = EditorView.theme({
-            '&': {
-                backgroundColor: customization.backgroundColor,
-                color: customization.textColor,
-                height: '100%',
-            },
-            '.cm-content': {
-                caretColor: customization.textColor,
-                fontFamily: 'JetBrains Mono, monospace',
-                padding: '1rem',
-            },
-            '.cm-gutters': {
-                backgroundColor: `${customization.highlightColor}20`,
-                color: customization.lineNumbersColor,
-                border: 'none',
-                paddingRight: '1rem',
-            },
-            '.cm-activeLineGutter': {
-                backgroundColor: 'transparent',
-                color: customization.textColor,
-            },
-            '.cm-activeLine': {
-                backgroundColor: `${customization.highlightColor}10`,
-            },
-            '.cm-matchingBracket': {
-                backgroundColor: `${customization.highlightColor}30`,
-                outline: 'none',
-            },
-            '.cm-selectionMatch': {
-                backgroundColor: `${customization.highlightColor}30`,
-            },
-            '.cm-cursor': {
-                borderLeftColor: customization.textColor,
-            },
-            '.cm-lineNumbers': {
-                minWidth: '3em',
-            },
-        });
-
-        const state = EditorState.create({
-            doc: content || undefined,
-            extensions: [
-                basicSetup,
-                python(),
-                customTheme,
-                syntaxHighlighting(syntaxHighlightingStyle),
-                EditorView.lineWrapping,
-                fontSizeCompartment.of(EditorView.theme({
-                    '.cm-content': { fontSize: `${fontSize}px` },
-                    '.cm-gutters': { fontSize: `${fontSize - 2}px` },
-                })),
-                tabSizeCompartment.of(EditorState.tabSize.of(tabSize)),
-                keymap.of([indentWithTab]),
-                EditorView.updateListener.of((update) => {
-                    if (update.docChanged) {
-                        const newContent = update.state.doc.toString();
-                        setContent(newContent);
-                        onContentChange?.(newContent);
-                        setHasUnsavedChanges(true);
-                    }
-                }),
-            ],
-        });
-
-        const view = new EditorView({
-            state,
-            parent: editorRef.current,
-        });
-
-        editorViewRef.current = view;
-
-        return () => {
-            if (editorViewRef.current) {
-                editorViewRef.current.destroy();
-                editorViewRef.current = null;
-            }
-        };
-    }, []);
-
-    // Update editor configuration when settings change
-    useEffect(() => {
-        if (!editorViewRef.current) return;
-
-        editorViewRef.current.dispatch({
-            effects: [
-                tabSizeCompartment.reconfigure(EditorState.tabSize.of(tabSize)),
-                fontSizeCompartment.reconfigure(EditorView.theme({
-                    '.cm-content': { fontSize: `${fontSize}px` },
-                    '.cm-gutters': { fontSize: `${fontSize - 2}px` },
-                }))
-            ]
-        });
-    }, [fontSize, tabSize]);
-
     return (
-        <div className="flex-1 rounded-lg shadow-2xl overflow-hidden transform transition-all"
+        <div
+            className="flex-1 rounded-lg shadow-2xl overflow-hidden transform transition-all"
             style={{
                 backgroundColor: customization.backgroundColor,
                 border: `1px solid ${customization.highlightColor}20`
             }}>
             {/* Header */}
-            <div className="flex justify-between items-center px-4 py-3 border-b"
+            <div
+                className="flex justify-between items-center px-4 py-3 border-b"
                 style={{
                     backgroundColor: `${customization.highlightColor}10`,
                     borderColor: `${customization.textColor}10`
@@ -286,7 +326,6 @@ const MainEditor: React.FC<MainEditorProps> = ({
                     )}
                 </div>
                 <div className="flex items-center gap-2">
-                 
                     <button
                         onClick={() => setShowGeneratePanel(true)}
                         className="p-2 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2"
@@ -331,7 +370,8 @@ const MainEditor: React.FC<MainEditorProps> = ({
 
             {/* Settings Panel */}
             {showSettings && (
-                <div className="p-4 border-b"
+                <div
+                    className="p-4 border-b"
                     style={{
                         backgroundColor: `${customization.highlightColor}05`,
                         borderColor: `${customization.textColor}10`
@@ -385,12 +425,43 @@ const MainEditor: React.FC<MainEditorProps> = ({
 
             {/* Error Message */}
             {saveError && (
-                <div className="absolute bottom-4 right-4 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg">
+                <div
+                    className="absolute bottom-4 right-4 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg"
+                    style={{ zIndex: 50 }}
+                >
                     {saveError}
                 </div>
             )}
+
+            {/* Activity Status Indicator */}
+            <div
+                className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                style={{
+                    backgroundColor: `${customization.highlightColor}10`,
+                    color: customization.textColor,
+                    zIndex: 50
+                }}
+            >
+                {timeTrackerRef.current && (
+                    <div className="flex items-center gap-1 text-xs">
+                        <div
+                            className="w-2 h-2 rounded-full animate-pulse"
+                            style={{ backgroundColor: customization.highlightColor }}
+                        />
+                        <span>Recording activity</span>
+                    </div>
+                )}
+            </div>
         </div>
     );
+};
+
+// Add PropTypes validation if needed
+MainEditor.defaultProps = {
+    code: '',
+    fileName: 'Untitled',
+    onRun: undefined,
+    onContentChange: undefined,
 };
 
 export default MainEditor;
