@@ -1,0 +1,29 @@
+{
+  "version": "1.0.1",
+  "notes": "# What's New in 1.0.1\n\n## New Features:\n- Added dark mode\n- Improved performance\n\n## Bug Fixes:\n- Fixed crash on startup\n- Fixed memory leak\n\n## Other Changes:\n- Updated dependencies",
+  "pub_date": "2024-03-17T13:00:00Z",
+  "platforms": {
+    "darwin-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTdFhaRUF1Q2JZaFZpa0ZtVGlvSmV6Ly9UV0VpRkZBQUFBQkFBQUFBQkFBQUFBQUFBQUFBRT0K",
+       "url": "https://huffman-updates.s3.ap-south-1.amazonaws.com/+releases/Huffman.dmg",
+       "size": 68059448
+    },
+   "darwin-aarch64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTdFhaRUF1Q2JZaFZpa0ZtVGlvSmV6Ly9UV0VpRkZBQUFBQkFBQUFBQkFBQUFBQUFBQUFBRT0K",
+      "url": "https://your-s3-bucket.s3.amazonaws.com/your-app-arm.app.tar.gz",
+      "size": 68059448
+    },
+
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTdFhaRUF1Q2JZaFZpa0ZtVGlvSmV6Ly9UV0VpRkZBQUFBQkFBQUFBQkFBQUFBQUFBQUFBRT0K",
+      "url": "https://your-s3-bucket.s3.amazonaws.com/your-app.msi",
+      "size": 78059448
+    },
+
+    "linux-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTdFhaRUF1Q2JZaFZpa0ZtVGlvSmV6Ly9UV0VpRkZBQUFBQkFBQUFBQkFBQUFBQUFBQUFBRT0K",
+      "url": "https://your-s3-bucket.s3.amazonaws.com/your-app.AppImage",
+      "size": 58059448
+    }
+  }
+}

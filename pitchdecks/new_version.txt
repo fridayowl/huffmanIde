@@ -1,0 +1,10 @@
+Problem statment 👍
+The lack of a unified visual coding environment with built-in
+ wellbeing monitoring and a supportive community is pushing 
+ developers to the brink. Endless hours spent navigating text-heavy
+ , monotonous interfaces lead to crippling mental exhaustion. 
+ The absence of tools to monitor work patterns silently fuels health 
+ crises, while the isolation in tackling complex technical challenges 
+ deepens the emotional toll. These compounded pressures 
+ drive widespread burnout, stifle creativity, and drag development 
+ cycles to a crawl, leaving the tech industry on a precarious edge.
