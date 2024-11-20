@@ -1,176 +1,372 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+    ActivitySquare, Brain, Heart, Clock, Battery, Zap,
+    X, Code, Timer, FileCode, AlertCircle, BookOpen,
+    Coffee, Target, Workflow, Sparkles, Flame,
+    Calculator, ChevronDown, ChevronUp,
+    LucideIcon
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import NavBarMinimal from '../NavBar';
-import { ActivitySquare, Brain, Heart, Clock, Battery, Zap, LucideIcon } from 'lucide-react';
-import TimeMetricsDashboard from './TimeMetricsDashboard';
-import MentalHealthDashboard from './MentalHealthDashboard';
-// import FocusScoreSystem from './Enhanced Focus Score System';
+import { HealthMetricsService, HealthMetricResult } from './HealthMetricsService';
 
-interface HealthMetric {
+interface MetricData {
+    title: string;
+    icon: LucideIcon;
+    description: string;
+    impact: string;
+    tips: string[];
+    calculation: {
+        formula: string;
+        factors: string[];
+        frequency: string;
+    };
+    bgColor: string;
+    category: string;
+    animation?: string;
+    value: string;    // Added
+    change: string;   // Added
+}
+
+const baseMetrics: Record<string, Omit<MetricData, 'value' | 'change'>> = {
+    flowState: {
+        title: "Flow State",
+        icon: Brain,
+        category: "Mental State",
+        description: "Your deep focus and coding rhythm metrics.",
+        impact: "Flow state is your peak performance zone where coding feels effortless and time flies.",
+        calculation: {
+            formula: "flowScore = (focusTime * 0.4) + (typingConsistency * 0.3) + (codeQuality * 0.3)",
+            factors: [
+                "Duration of uninterrupted coding",
+                "Consistency in typing patterns",
+                "Code complexity changes",
+                "Context switches frequency"
+            ],
+            frequency: "Updated in real-time"
+        },
+        tips: [
+            "Block notifications during deep work sessions",
+            "Use noise-canceling headphones",
+            "Break large tasks into focused sprints"
+        ],
+        bgColor: "bg-gradient-to-br from-indigo-950 to-indigo-900",
+        animation: "animate-pulse"
+    },
+    codeQuality: {
+        title: "Code Quality",
+        icon: FileCode,
+        category: "Performance",
+        description: "Analysis of code structure and maintainability.",
+        impact: "High-quality code reduces debugging time and improves collaboration.",
+        calculation: {
+            formula: "qualityScore = (complexity * 0.4) + (consistency * 0.3) + (patterns * 0.3)",
+            factors: [
+                "Code complexity metrics",
+                "Pattern consistency",
+                "Error rates",
+                "Documentation quality"
+            ],
+            frequency: "Updated after each save"
+        },
+        tips: [
+            "Review code before commits",
+            "Write comprehensive tests",
+            "Maintain consistent style",
+            "Document complex logic"
+        ],
+        bgColor: "bg-gradient-to-br from-emerald-950 to-emerald-900"
+    },
+    focusScore: {
+        title: "Focus Score",
+        icon: Target,
+        category: "Productivity",
+        description: "Measurement of concentrated coding time.",
+        impact: "High focus leads to faster problem-solving and fewer errors.",
+        calculation: {
+            formula: "focusScore = (sessionLength * 0.4) + (continuousWork * 0.3) + (mentalClarity * 0.3)",
+            factors: [
+                "Session duration",
+                "Break patterns",
+                "Context switching",
+                "Distraction metrics"
+            ],
+            frequency: "Updated every minute"
+        },
+        tips: [
+            "Use Pomodoro technique",
+            "Create a dedicated workspace",
+            "Minimize interruptions",
+            "Take regular breaks"
+        ],
+        bgColor: "bg-gradient-to-br from-blue-950 to-blue-900"
+    },
+    codingRhythm: {
+        title: "Coding Rhythm",
+        icon: Workflow,
+        category: "Performance",
+        description: "Analysis of your coding flow and consistency.",
+        impact: "Good rhythm leads to more efficient code writing and fewer errors.",
+        calculation: {
+            formula: "rhythmScore = (typingSpeed * 0.3) + (consistency * 0.4) + (errorRate * 0.3)",
+            factors: [
+                "Typing speed patterns",
+                "Code flow consistency",
+                "Error correction rate",
+                "Command usage efficiency"
+            ],
+            frequency: "Updated in real-time"
+        },
+        tips: [
+            "Practice touch typing",
+            "Learn keyboard shortcuts",
+            "Use code snippets",
+            "Master IDE features"
+        ],
+        bgColor: "bg-gradient-to-br from-cyan-950 to-cyan-900"
+    },
+    codingStreak: {
+        title: "Coding Streak",
+        icon: Flame,
+        category: "Achievement",
+        description: "Your continuous coding session metrics.",
+        impact: "Long focused sessions often lead to breakthrough solutions.",
+        calculation: {
+            formula: "streakScore = (duration * 0.4) + (quality * 0.3) + (efficiency * 0.3)",
+            factors: [
+                "Session duration",
+                "Code quality",
+                "Problem-solving rate",
+                "Break optimization"
+            ],
+            frequency: "Updated continuously"
+        },
+        tips: [
+            "Build streak length gradually",
+            "Prepare environment beforehand",
+            "Stay hydrated",
+            "Document breakthroughs"
+        ],
+        bgColor: "bg-gradient-to-br from-pink-950 to-pink-900",
+        animation: "animate-pulse"
+    }
+    
+};
+
+interface MetricCardProps {
     title: string;
     value: string;
     change: string;
     icon: LucideIcon;
     description: string;
-    gradient: string;
-}
-
-interface HealthMetricCardProps extends HealthMetric { }
-
-interface DashboardCustomization {
-    backgroundColor: string;
-    textColor: string;
-    highlightColor: string;
-}
-
-type TabType = 'overview' | 'focus' | 'mental';
-
-const HealthAnalytics: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<TabType>('overview');
-
-    // Theme customization
-    const dashboardCustomization: DashboardCustomization = {
-        backgroundColor: "transparent",
-        textColor: "#ffffff",
-        highlightColor: "#818cf8"
+    impact: string;
+    tips: string[];
+    calculation: {
+        formula: string;
+        factors: string[];
+        frequency: string;
     };
+    bgColor: string;
+    category: string;
+    animation?: string;
+    onInfoToggle: (title: string | null) => void;
+    isInfoVisible: boolean;
+}
 
-    const metrics: HealthMetric[] = [
-        {
-            title: "Focus Score",
-            value: "85%",
-            change: "+5%",
-            icon: Brain,
-            description: "Daily cognitive performance",
-            gradient: "from-purple-900/50 to-purple-800/50"
-        },
-        {
-            title: "Stress Level",
-            value: "Low",
-            change: "Optimal",
-            icon: Heart,
-            description: "Based on activity patterns",
-            gradient: "from-red-900/50 to-red-800/50"
-        },
-        {
-            title: "Break Time",
-            value: "45m",
-            change: "On Track",
-            icon: Clock,
-            description: "Total break duration",
-            gradient: "from-blue-900/50 to-blue-800/50"
-        },
-        {
-            title: "Energy Level",
-            value: "High",
-            change: "+10%",
-            icon: Battery,
-            description: "Based on productivity",
-            gradient: "from-green-900/50 to-green-800/50"
-        },
-        {
-            title: "Productivity",
-            value: "92%",
-            change: "+3%",
-            icon: Zap,
-            description: "Task completion rate",
-            gradient: "from-yellow-900/50 to-yellow-800/50"
-        }
-    ];
+const MetricCard: React.FC<MetricCardProps> = ({
+    title,
+    value,
+    change,
+    icon: Icon,
+    description,
+    impact,
+    tips,
+    calculation,
+    category,
+    bgColor,
+    onInfoToggle,
+    isInfoVisible,
+    animation
+}) => {
+    const [showCalculation, setShowCalculation] = useState(false);
 
-    const HealthMetricCard: React.FC<HealthMetricCardProps> = ({
-        title,
-        value,
-        change,
-        icon: Icon,
-        description,
-        gradient
-    }) => (
-        <div className="relative group">
-            <div className={`p-6 rounded-lg border border-gray-800 bg-gradient-to-br ${gradient} backdrop-blur-xl transition-all duration-300 hover:-translate-y-1`}>
+    return (
+        <div className="relative w-full">
+            <div className={`${bgColor} ${animation} p-5 rounded-xl border border-white/5 backdrop-blur-sm 
+                transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-800/20 
+                min-h-[280px] flex flex-col`}>
                 <div className="flex items-start justify-between mb-4">
-                    <div className="p-2 bg-white/5 rounded-lg">
-                        <Icon className="w-6 h-6 text-white" />
+                    <div className="flex flex-col">
+                        <div className="p-2 bg-white/5 rounded-lg w-fit">
+                            <Icon className="w-5 h-5 text-white/80" />
+                        </div>
+                        <div className="mt-2">
+                            <p className="text-xs text-gray-400 font-medium">{category}</p>
+                            <h3 className="text-base font-medium text-gray-200 mt-0.5 line-clamp-1">{title}</h3>
+                        </div>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white">{change}</span>
+                    <button
+                        onClick={() => onInfoToggle(isInfoVisible ? null : title)}
+                        className="p-1.5 hover:bg-white/5 rounded-lg transition-colors"
+                    >
+                        {isInfoVisible ? (
+                            <X className="w-4 h-4 text-gray-400" />
+                        ) : (
+                            <BookOpen className="w-4 h-4 text-gray-400" />
+                        )}
+                    </button>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-1">{value}</h3>
-                <p className="text-sm text-gray-400 mb-2">{title}</p>
-                <p className="text-xs text-gray-500">{description}</p>
+
+                <div className="flex-1">
+                    {!isInfoVisible ? (
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <div className="text-3xl font-semibold text-white">{value}</div>
+                                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5">
+                                    <Sparkles className="w-3 h-3 text-gray-300" />
+                                    <span className="text-xs text-gray-300">{change}</span>
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-400 leading-relaxed line-clamp-3">
+                                {description}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3 h-full overflow-y-auto">
+                            <div>
+                                <div className="text-xs font-medium text-gray-300 mb-1">Why it matters</div>
+                                <p className="text-xs text-gray-400 leading-relaxed">{impact}</p>
+                            </div>
+
+                            <div>
+                                <button
+                                    onClick={() => setShowCalculation(!showCalculation)}
+                                    className="flex items-center justify-between w-full text-xs font-medium text-gray-300 mb-1 hover:text-gray-200"
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <Calculator className="w-3 h-3" />
+                                        <span>How it's calculated</span>
+                                    </div>
+                                    {showCalculation ? (
+                                        <ChevronUp className="w-3 h-3" />
+                                    ) : (
+                                        <ChevronDown className="w-3 h-3" />
+                                    )}
+                                </button>
+                                {showCalculation && (
+                                    <div className="bg-black/20 rounded-lg p-3 space-y-2 mt-2">
+                                        <p className="text-xs text-gray-400 font-mono">{calculation.formula}</p>
+                                        <div className="space-y-1">
+                                            <p className="text-xs text-gray-500">Factors considered:</p>
+                                            <ul className="space-y-1">
+                                                {calculation.factors.map((factor, index) => (
+                                                    <li key={index} className="flex items-start gap-1.5">
+                                                        <span className="text-gray-500 text-xs">•</span>
+                                                        <span className="text-xs text-gray-400">{factor}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <p className="text-xs text-gray-500">
+                                            Updated: {calculation.frequency}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <div className="text-xs font-medium text-gray-300 mb-1">Tips to improve</div>
+                                <ul className="space-y-2">
+                                    {tips.map((tip, index) => (
+                                        <li key={index} className="flex items-start gap-1.5">
+                                            <Flame className="w-3 h-3 text-gray-500 mt-0.5 flex-shrink-0" />
+                                            <span className="text-xs text-gray-400 leading-relaxed">{tip}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
+};
 
-    const tabs: TabType[] = ['overview', 'focus', 'mental'];
+const HealthAnalytics: React.FC = () => {
+    const [showInfo, setShowInfo] = useState<string | null>(null);
+    const [metrics, setMetrics] = useState<Record<string, HealthMetricResult>>({});
+    const [updateCounter, setUpdateCounter] = useState(0);
+
+    useEffect(() => {
+        // Update metrics initially
+        updateMetrics();
+
+        // Set up interval for periodic updates
+        const intervalId = setInterval(() => {
+            setUpdateCounter(prev => prev + 1);
+        }, 60000); // Update every minute
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    useEffect(() => {
+        updateMetrics();
+    }, [updateCounter]);
+
+    const updateMetrics = () => {
+        const newMetrics = HealthMetricsService.calculateAllMetrics();
+        setMetrics(newMetrics);
+    };
+
+    const formatValue = (metric: HealthMetricResult) => {
+        if (typeof metric.value === 'number') {
+            return `${metric.value.toFixed(1)}%`;
+        }
+        return metric.value;
+    };
+
+    const getMetricCards = (): MetricData[] => {
+        return Object.entries(metrics).map(([key, metricResult]) => {
+            const baseMetric = baseMetrics[key];
+            if (!baseMetric) return null;
+
+            // Ensure all required properties are present
+            return {
+                ...baseMetric,
+                value: formatValue(metricResult),
+                change: metricResult.change || 'No change',
+            } as MetricData;
+        }).filter((metric): metric is MetricData => metric !== null);
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="min-h-screen bg-[#0D1117] pb-24">
             <NavBarMinimal />
 
-            <main className="container mx-auto px-6 py-8 space-y-12">
-                {/* Header Section */}
-                <div>
-                    <div className="flex items-center gap-2 mb-4">
-                        <ActivitySquare className="w-8 h-8 text-indigo-400" />
-                        <h1 className="text-3xl font-bold text-white">Developer Health Analytics</h1>
+            <main className="container mx-auto px-4 py-6 space-y-8">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gray-800 rounded-lg">
+                            <ActivitySquare className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-medium text-white">Developer Health Analytics</h1>
+                            <p className="text-sm text-gray-400">Your personalized coding wellness dashboard</p>
+                        </div>
                     </div>
-                    <p className="text-gray-400 max-w-2xl">
-                        Monitor and optimize your development habits with real-time health metrics and personalized insights.
-                    </p>
                 </div>
 
-                {/* Navigation Tabs */}
-                <div className="flex gap-4 border-b border-gray-700">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${activeTab === tab
-                                    ? 'text-indigo-400 border-indigo-400'
-                                    : 'text-gray-400 border-transparent hover:text-gray-300'
-                                }`}
-                        >
-                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                        </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getMetricCards().map((metric, index) => (
+                        <MetricCard
+                            key={index}
+                            {...metric}
+                            onInfoToggle={setShowInfo}
+                            isInfoVisible={showInfo === metric.title}
+                        />
                     ))}
                 </div>
-
-                {/* Dynamic Content Based on Active Tab */}
-                {activeTab === 'overview' && (
-                    <>
-                        {/* Metrics Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                            {metrics.map((metric, index) => (
-                                <HealthMetricCard key={index} {...metric} />
-                            ))}
-                        </div>
-
-                        {/* Time Metrics Dashboard */}
-                        <div className="bg-gray-800/50 backdrop-blur-xl rounded-lg border border-gray-700">
-                            <div className="p-6 border-b border-gray-700">
-                                <div className="flex items-center gap-2">
-                                    <Clock className="w-6 h-6 text-indigo-400" />
-                                    <h2 className="text-xl font-bold text-white">Time Analytics</h2>
-                                </div>
-                                <p className="text-gray-400 mt-1">
-                                    Detailed breakdown of your coding sessions and time management metrics
-                                </p>
-                            </div>
-                            <TimeMetricsDashboard customization={dashboardCustomization} />
-                        </div>
-                    </>
-                )}
-
-                {activeTab === 'focus' && (
-                    <div className="bg-gray-800/50 backdrop-blur-xl rounded-lg border border-gray-700">
-                        {/* <FocusScoreSystem /> */}
-                    </div>
-                )}
-
-                {activeTab === 'mental' && (
-                    <div className="bg-gray-800/50 backdrop-blur-xl rounded-lg border border-gray-700">
-                        <MentalHealthDashboard />
-                    </div>
-                )}
             </main>
         </div>
     );
