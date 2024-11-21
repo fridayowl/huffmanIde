@@ -7,10 +7,18 @@
     "distDir": "../build"
   },
   "package": {
-    "productName": "HuffmanIDE",
-    "version": "1.1.0"
+    "productName": "Huffman",
+    "version": "1.0.0"
   },
   "tauri": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://huffman-updates.s3.ap-south-1.amazonaws.com/updates.json"
+      ],
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE4NzNGMDRCRjdGOTAzQTcKUldTbkEvbjNTL0J6R1BKeFhCajdNZ0JTV1NhaldyR09uNWtCS1ZDY0RMRFdvWklCWjBjdnpHK1QK"
+    } ,
     "allowlist": {
       "all": false,
       "dialog": {
@@ -18,7 +26,11 @@
         "open": true,
         "save": true
       },
-
+      "http": {
+        "all": false,
+        "request": true,
+        "scope": ["http://localhost:11434/*"]
+      },
       "shell": {
         "all": true,
         "execute": true,
@@ -36,30 +48,10 @@
           },
           {
             "name": "ollama",
-            "cmd": "/usr/local/bin/ollama",
-            "args": true
-          },
-          {
-            "name": "which",
-            "cmd": "which",
-            "args": true
-          },
-          {
-            "name": "sh",
-            "cmd": "sh",
-            "args": true
-          },
-          {
-            "name": "rm",
-            "cmd": "rm",
+            "cmd": "ollama",
             "args": true
           }
         ]
-      },
-      "http": {
-        "all": false,
-        "request": true,
-        "scope": ["http://localhost:11434/*"]
       },
       "fs": {
         "all": true,
@@ -79,7 +71,7 @@
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
+      "category": "Development",
       "copyright": "",
       "deb": {
         "depends": []
@@ -88,7 +80,7 @@
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
-        "icons/128x128@2x.png",
+        "icons/128x128.png",
         "icons/icon.icns",
         "icons/icon.ico"
       ],
@@ -112,23 +104,14 @@
     },
     "security": {
       "csp": null
-    },
-    "updater": {
-      "active": true,
-      "endpoints": [
-        "https://huffman-updates.s3.ap-south-1.amazonaws.com/updates.json"
-      ],
-      "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE4NzNGMDRCRjdGOTAzQTcKUldTbkEvbjNTL0J6R1BKeFhCajdNZ0JTV1NhaldyR09uNWtCS1ZDY0RMRFdvWklCWjBjdnpHK1QK"
-    },
+    }, 
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 650,
         "resizable": true,
-         
-        "width": 800,
-        "title": "HuffmanIDE"
+        "title": "",
+        "width": 850
       }
     ]
   }

@@ -1,11 +1,40 @@
-// coreFunctions.ts
 import { fetch, Body, ResponseType } from '@tauri-apps/api/http';
 import { Command } from '@tauri-apps/api/shell';
 import { ModelConfig, ModelParameters } from './types';
+import { sendNotification } from '@tauri-apps/api/notification';
+import { homeDir, join } from '@tauri-apps/api/path';
+
+// Known Ollama paths for macOS
+const OLLAMA_PATHS = [
+  '/usr/local/bin/ollama',
+  '/opt/homebrew/bin/ollama',
+  '/opt/local/bin/ollama'
+];
+
+/**
+ * Find the correct Ollama path
+ */
+async function findOllamaPath(): Promise<string | null> {
+  for (const path of OLLAMA_PATHS) {
+    try {
+      const command = new Command('ls', [path]);
+      const result = await command.execute();
+      if (result.code === 0) {
+        return path;
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+  return null;
+}
 
 export async function checkOllamaAPI(): Promise<boolean> {
   try {
-    const response = await fetch('http://localhost:11434/api/version');
+    const response = await fetch('http://localhost:11434/api/version', {
+      method: 'GET',
+      timeout: 5.0
+    });
     return response.ok;
   } catch (error) {
     console.error('Failed to connect to Ollama API:', error);
@@ -13,26 +42,71 @@ export async function checkOllamaAPI(): Promise<boolean> {
   }
 }
 
-export async function checkOllamaInstallation(): Promise<{ isInstalled: boolean; installedModels: string[] }> {
+async function getModelsViaAPI(): Promise<string[]> {
   try {
-    const command = new Command('ollama', ['list']);
-    const output = await command.execute();
-
-    const apiAccessible = await checkOllamaAPI();
-    if (!apiAccessible) {
-      return { isInstalled: false, installedModels: [] };
+    const response = await fetch('http://localhost:11434/api/tags', {
+      method: 'GET',
+      timeout: 5.0
+    });
+    
+    if (response.ok) {
+      const data = response.data as { models: { name: string }[] };
+      return data.models.map(m => m.name);
     }
-
-    const models = output.stdout
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => line.split(' ')[0]);
-
-    return { isInstalled: true, installedModels: models };
   } catch (error) {
-    console.error('Failed to check Ollama installation:', error);
-    return { isInstalled: false, installedModels: [] };
+    console.error('Failed to get models via API:', error);
   }
+  return [];
+}
+
+async function getModelsViaShell(ollamaPath: string): Promise<string[]> {
+  try {
+    const command = new Command(ollamaPath, ['list']);
+    const output = await command.execute();
+    
+    if (output.code === 0) {
+      return output.stdout
+        .split('\n')
+        .filter(line => line.trim())
+        .map(line => line.split(' ')[0]);
+    }
+  } catch (error) {
+    console.error('Failed to get models via shell:', error);
+  }
+  return [];
+}
+
+export async function checkOllamaInstallation(): Promise<{ 
+  isInstalled: boolean; 
+  installedModels: string[];
+  apiAccessible: boolean;
+  shellAccessible: boolean;
+}> {
+  let apiAccessible = false;
+  let shellAccessible = false;
+  let installedModels: string[] = [];
+
+  // Check API
+  apiAccessible = await checkOllamaAPI();
+  if (apiAccessible) {
+    const apiModels = await getModelsViaAPI();
+    installedModels = [...apiModels];
+  }
+
+  // Check Shell
+  const ollamaPath = await findOllamaPath();
+  if (ollamaPath) {
+    shellAccessible = true;
+    const shellModels = await getModelsViaShell(ollamaPath);
+    installedModels = [...new Set([...installedModels, ...shellModels])];
+  }
+
+  return {
+    isInstalled: apiAccessible || shellAccessible,
+    installedModels,
+    apiAccessible,
+    shellAccessible
+  };
 }
 
 export async function pullModel(
@@ -40,33 +114,69 @@ export async function pullModel(
   onProgress: (progress: number) => void,
   onStatus: (status: string) => void
 ): Promise<boolean> {
+  // Try API first
   try {
-    const command = new Command('ollama', ['pull', modelName]);
+    const response = await fetch('http://localhost:11434/api/pull', {
+      method: 'POST',
+      body: Body.json({ name: modelName }),
+      responseType: ResponseType.Text
+    });
+
+    if (response.ok) {
+      onProgress(100);
+      onStatus('Model pulled successfully via API');
+      return true;
+    }
+  } catch (apiError) {
+    console.error('API pull failed, trying shell method:', apiError);
+  }
+
+  // Try shell method
+  try {
+    const ollamaPath = await findOllamaPath();
+    if (!ollamaPath) {
+      throw new Error('Ollama executable not found');
+    }
+
+    const command = new Command(ollamaPath, ['pull', modelName]);
 
     command.stdout.on('data', line => {
       const progressMatch = line.match(/(\d+)%/);
       if (progressMatch) {
         onProgress(parseInt(progressMatch[1]));
       }
-      onStatus(line);  // Changed: directly pass the line string
+      onStatus(line);
     });
 
     command.stderr.on('data', line => {
-      onStatus(line);  // Changed: directly pass the line string
+      onStatus(line);
     });
 
-    await command.execute();
-    return true;
+    const result = await command.execute();
+    
+    if (result.code === 0) {
+      try {
+        await sendNotification({
+          title: 'Model Download Complete',
+          body: `Successfully downloaded ${modelName}`
+        });
+      } catch (notificationError) {
+        console.error('Failed to send notification:', notificationError);
+      }
+      return true;
+    }
   } catch (error) {
     console.error('Failed to pull model:', error);
-    return false;
+    onStatus(`Error: ${error}`);
   }
+
+  return false;
 }
 
 export async function sendPrompt(
   model: string,
   prompt: string,
-  parameters: ModelParameters  // Changed: use proper type
+  parameters: ModelParameters
 ): Promise<{ success: boolean; response?: string; error?: string }> {
   try {
     const response = await fetch('http://localhost:11434/api/generate', {
@@ -97,9 +207,10 @@ export async function sendPrompt(
       return { success: true, response: result.response };
     }
   } catch (error) {
+    console.error('Failed to send prompt:', error);
     return {
       success: false,
-      error: 'Failed to get response from model. Make sure Ollama is running.'
+      error: 'Failed to get response from model. Make sure Ollama is running and accessible.'
     };
   }
 }
@@ -109,31 +220,70 @@ export async function createCustomModel(
   modelfileContent: string,
   onStatus: (status: string) => void
 ): Promise<boolean> {
+  // Try API first
   try {
-    // Create temporary Modelfile
-    const modelfilePath = `/tmp/${customModelName}.modelfile`;
-    const createFile = new Command('bash', ['-c', `echo '${modelfileContent.replace(/'/g, "'\\''")}' > ${modelfilePath}`]);
-    await createFile.execute();
+    const response = await fetch('http://localhost:11434/api/create', {
+      method: 'POST',
+      body: Body.json({
+        name: customModelName,
+        modelfile: modelfileContent
+      })
+    });
 
-    // Create model using Ollama
-    const createCommand = new Command('ollama', ['create', customModelName, modelfilePath]);
+    if (response.ok) {
+      onStatus('Model created successfully via API');
+      await sendNotification({
+        title: 'Custom Model Created',
+        body: `Successfully created model: ${customModelName}`
+      });
+      return true;
+    }
+  } catch (apiError) {
+    console.error('Failed to create model via API:', apiError);
+    onStatus('API creation failed, trying shell method...');
+  }
+
+  // Try shell method
+  try {
+    const ollamaPath = await findOllamaPath();
+    if (!ollamaPath) {
+      throw new Error('Ollama executable not found');
+    }
+
+    const home = await homeDir();
+    const tempPath = await join(home, `${customModelName}_${Date.now()}.modelfile`);
+
+    // Write modelfile using Command
+    const writeCommand = new Command('sh', ['-c', `echo '${modelfileContent.replace(/'/g, "'\\''")}' > "${tempPath}"`]);
+    await writeCommand.execute();
+
+    const createCommand = new Command(ollamaPath, ['create', customModelName, tempPath]);
     
     createCommand.stdout.on('data', line => {
-      onStatus(line);  // Changed: directly pass the line string
+      onStatus(line);
     });
 
     createCommand.stderr.on('data', line => {
-      onStatus(line);  // Changed: directly pass the line string
+      onStatus(line);
     });
 
-    await createCommand.execute();
+    const result = await createCommand.execute();
     
     // Clean up
-    await new Command('rm', [modelfilePath]).execute();
+    const rmCommand = new Command('rm', [tempPath]);
+    await rmCommand.execute();
     
-    return true;
+    if (result.code === 0) {
+      await sendNotification({
+        title: 'Custom Model Created',
+        body: `Successfully created model: ${customModelName}`
+      });
+      return true;
+    }
   } catch (error) {
     console.error('Failed to create custom model:', error);
-    return false;
+    onStatus(`Error: ${error}`);
   }
+
+  return false;
 }
