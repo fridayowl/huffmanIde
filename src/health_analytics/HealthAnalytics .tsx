@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
     ActivitySquare, Brain, Heart, Clock, Battery, Zap,
-    X, Code, Timer, FileCode, AlertCircle, BookOpen,
+    X, Code, Timer, FileCode, AlertCircle, Info,
     Coffee, Target, Workflow, Sparkles, Flame,
     Calculator, ChevronDown, ChevronUp,
     LucideIcon
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import NavBarMinimal from '../NavBar';
 import { HealthMetricsService, HealthMetricResult } from './HealthMetricsService';
+import { WaterReminder } from './reminders/WaterReminder';
+import { BreakReminder } from './reminders/BreakReminder';
+import { useSessionMetrics } from './useSessionMetrics';
+import { SessionGraph } from './SessionGraph';
 
 interface MetricData {
     title: string;
@@ -24,8 +28,8 @@ interface MetricData {
     bgColor: string;
     category: string;
     animation?: string;
-    value: string;    // Added
-    change: string;   // Added
+    value: string;
+    change: string;
 }
 
 const baseMetrics: Record<string, Omit<MetricData, 'value' | 'change'>> = {
@@ -150,7 +154,6 @@ const baseMetrics: Record<string, Omit<MetricData, 'value' | 'change'>> = {
         bgColor: "bg-gradient-to-br from-pink-950 to-pink-900",
         animation: "animate-pulse"
     }
-    
 };
 
 interface MetricCardProps {
@@ -189,124 +192,121 @@ const MetricCard: React.FC<MetricCardProps> = ({
     animation
 }) => {
     const [showCalculation, setShowCalculation] = useState(false);
+    const sessionData = useSessionMetrics();
+    const isCodingStreak = title === "Coding Streak";
 
     return (
-        <div className="relative w-full">
-            <div className={`${bgColor} ${animation} p-5 rounded-xl border border-white/5 backdrop-blur-sm 
-                transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-800/20 
-                min-h-[280px] flex flex-col`}>
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex flex-col">
-                        <div className="p-2 bg-white/5 rounded-lg w-fit">
-                            <Icon className="w-5 h-5 text-white/80" />
+        <div className={`${bgColor} ${animation} p-5 rounded-xl border border-white/5 backdrop-blur-sm 
+            transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-800/20 
+            ${isCodingStreak ? 'lg:row-span-2' : ''}`}>
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col">
+                    <div className="p-2 bg-white/5 rounded-lg w-fit">
+                        <Icon className="w-5 h-5 text-white/80" />
+                    </div>
+                    <div className="mt-2">
+                        <p className="text-xs text-gray-400 font-medium">{category}</p>
+                        <h3 className="text-base font-medium text-gray-200 mt-0.5 line-clamp-1">{title}</h3>
+                    </div>
+                </div>
+                <button
+                    onClick={() => onInfoToggle(isInfoVisible ? null : title)}
+                    className="p-1.5 hover:bg-white/5 rounded-lg transition-colors"
+                >
+                    {isInfoVisible ? (
+                        <X className="w-4 h-4 text-gray-400" />
+                    ) : (
+                        <Info className="w-4 h-4 text-gray-400" />
+                    )}
+                </button>
+            </div>
+
+            <div className="flex-1">
+                {!isInfoVisible ? (
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <div className="text-3xl font-semibold text-white">{value}</div>
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5">
+                                <Sparkles className="w-3 h-3 text-gray-300" />
+                                <span className="text-xs text-gray-300">{change}</span>
+                            </div>
                         </div>
-                        <div className="mt-2">
-                            <p className="text-xs text-gray-400 font-medium">{category}</p>
-                            <h3 className="text-base font-medium text-gray-200 mt-0.5 line-clamp-1">{title}</h3>
+                        <p className="text-sm text-gray-400 leading-relaxed line-clamp-3">
+                            {description}
+                        </p>
+                        {isCodingStreak && <SessionGraph data={sessionData} />}
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        <div>
+                            <div className="text-xs font-medium text-gray-300 mb-1">Why it matters</div>
+                            <p className="text-xs text-gray-400 leading-relaxed">{impact}</p>
+                        </div>
+
+                        <div>
+                            <button
+                                onClick={() => setShowCalculation(!showCalculation)}
+                                className="flex items-center justify-between w-full text-xs font-medium text-gray-300 mb-1 hover:text-gray-200"
+                            >
+                                <div className="flex items-center gap-1.5">
+                                    <Calculator className="w-3 h-3" />
+                                    <span>How it's calculated</span>
+                                </div>
+                                {showCalculation ? (
+                                    <ChevronUp className="w-3 h-3" />
+                                ) : (
+                                    <ChevronDown className="w-3 h-3" />
+                                )}
+                            </button>
+                            {showCalculation && (
+                                <div className="bg-black/20 rounded-lg p-3 space-y-2 mt-2">
+                                    <p className="text-xs text-gray-400 font-mono">{calculation.formula}</p>
+                                    <div className="space-y-1">
+                                        <p className="text-xs text-gray-500">Factors considered:</p>
+                                        <ul className="space-y-1">
+                                            {calculation.factors.map((factor, index) => (
+                                                <li key={index} className="flex items-start gap-1.5">
+                                                    <span className="text-gray-500 text-xs">•</span>
+                                                    <span className="text-xs text-gray-400">{factor}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        Updated: {calculation.frequency}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <div className="text-xs font-medium text-gray-300 mb-1">Tips to improve</div>
+                            <ul className="space-y-2">
+                                {tips.map((tip, index) => (
+                                    <li key={index} className="flex items-start gap-1.5">
+                                        <Flame className="w-3 h-3 text-gray-500 mt-0.5 flex-shrink-0" />
+                                        <span className="text-xs text-gray-400 leading-relaxed">{tip}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                     </div>
-                    <button
-                        onClick={() => onInfoToggle(isInfoVisible ? null : title)}
-                        className="p-1.5 hover:bg-white/5 rounded-lg transition-colors"
-                    >
-                        {isInfoVisible ? (
-                            <X className="w-4 h-4 text-gray-400" />
-                        ) : (
-                            <BookOpen className="w-4 h-4 text-gray-400" />
-                        )}
-                    </button>
-                </div>
-
-                <div className="flex-1">
-                    {!isInfoVisible ? (
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <div className="text-3xl font-semibold text-white">{value}</div>
-                                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5">
-                                    <Sparkles className="w-3 h-3 text-gray-300" />
-                                    <span className="text-xs text-gray-300">{change}</span>
-                                </div>
-                            </div>
-                            <p className="text-sm text-gray-400 leading-relaxed line-clamp-3">
-                                {description}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3 h-full overflow-y-auto">
-                            <div>
-                                <div className="text-xs font-medium text-gray-300 mb-1">Why it matters</div>
-                                <p className="text-xs text-gray-400 leading-relaxed">{impact}</p>
-                            </div>
-
-                            <div>
-                                <button
-                                    onClick={() => setShowCalculation(!showCalculation)}
-                                    className="flex items-center justify-between w-full text-xs font-medium text-gray-300 mb-1 hover:text-gray-200"
-                                >
-                                    <div className="flex items-center gap-1.5">
-                                        <Calculator className="w-3 h-3" />
-                                        <span>How it's calculated</span>
-                                    </div>
-                                    {showCalculation ? (
-                                        <ChevronUp className="w-3 h-3" />
-                                    ) : (
-                                        <ChevronDown className="w-3 h-3" />
-                                    )}
-                                </button>
-                                {showCalculation && (
-                                    <div className="bg-black/20 rounded-lg p-3 space-y-2 mt-2">
-                                        <p className="text-xs text-gray-400 font-mono">{calculation.formula}</p>
-                                        <div className="space-y-1">
-                                            <p className="text-xs text-gray-500">Factors considered:</p>
-                                            <ul className="space-y-1">
-                                                {calculation.factors.map((factor, index) => (
-                                                    <li key={index} className="flex items-start gap-1.5">
-                                                        <span className="text-gray-500 text-xs">•</span>
-                                                        <span className="text-xs text-gray-400">{factor}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                        <p className="text-xs text-gray-500">
-                                            Updated: {calculation.frequency}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <div className="text-xs font-medium text-gray-300 mb-1">Tips to improve</div>
-                                <ul className="space-y-2">
-                                    {tips.map((tip, index) => (
-                                        <li key={index} className="flex items-start gap-1.5">
-                                            <Flame className="w-3 h-3 text-gray-500 mt-0.5 flex-shrink-0" />
-                                            <span className="text-xs text-gray-400 leading-relaxed">{tip}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                )}
             </div>
         </div>
     );
 };
 
-const HealthAnalytics: React.FC = () => {
+const HealthAnalytics = () => {
     const [showInfo, setShowInfo] = useState<string | null>(null);
     const [metrics, setMetrics] = useState<Record<string, HealthMetricResult>>({});
     const [updateCounter, setUpdateCounter] = useState(0);
 
     useEffect(() => {
-        // Update metrics initially
         updateMetrics();
-
-        // Set up interval for periodic updates
         const intervalId = setInterval(() => {
             setUpdateCounter(prev => prev + 1);
-        }, 60000); // Update every minute
-
+        }, 60000);
         return () => clearInterval(intervalId);
     }, []);
 
@@ -326,12 +326,10 @@ const HealthAnalytics: React.FC = () => {
         return metric.value;
     };
 
-    const getMetricCards = (): MetricData[] => {
+    const getMetricCards = () => {
         return Object.entries(metrics).map(([key, metricResult]) => {
             const baseMetric = baseMetrics[key];
             if (!baseMetric) return null;
-
-            // Ensure all required properties are present
             return {
                 ...baseMetric,
                 value: formatValue(metricResult),
@@ -357,8 +355,9 @@ const HealthAnalytics: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {getMetricCards().map((metric, index) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
+                    {/* First three metric cards */}
+                    {getMetricCards().slice(0, 3).map((metric, index) => (
                         <MetricCard
                             key={index}
                             {...metric}
@@ -366,10 +365,46 @@ const HealthAnalytics: React.FC = () => {
                             isInfoVisible={showInfo === metric.title}
                         />
                     ))}
+
+                    {/* Fourth column with focus card and timers */}
+                    <div className="space-y-4">
+                        {getMetricCards()[3] && (
+                            <MetricCard
+                                {...getMetricCards()[3]}
+                                onInfoToggle={setShowInfo}
+                                isInfoVisible={showInfo === getMetricCards()[3].title}
+                            />
+                        )}
+                        <div className="flex gap-4">
+                            <WaterReminder />
+                            <BreakReminder />
+                        </div>
+                    </div>
+
+                    {/* Fifth column with taller coding streak card */}
+                    {getMetricCards()[4] && (
+                        <MetricCard
+                            {...getMetricCards()[4]}
+                            onInfoToggle={setShowInfo}
+                            isInfoVisible={showInfo === getMetricCards()[4].title}
+                        />)}
                 </div>
             </main>
         </div>
     );
 };
 
+// Utility type for strict type checking of metric keys
+type MetricKey = keyof typeof baseMetrics;
+
+// Additional types for better type safety
+interface ExtendedHealthMetricResult extends HealthMetricResult {
+    details?: {
+        sessionCount?: number;
+        totalDuration?: number;
+        averageDuration?: number;
+    };
+}
+
+// Export the component
 export default HealthAnalytics;

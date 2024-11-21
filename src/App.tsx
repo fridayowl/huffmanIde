@@ -6,8 +6,7 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import IDEHome from './IDEHome';
 import HealthAnalytics from './health_analytics/HealthAnalytics ';
 import Community from './developer_community/Community';
-
-// Test Ollama function with streaming support
+ 
 const testOllama = async () => {
   try {
     // First check if Ollama API is accessible
@@ -29,7 +28,8 @@ const testOllama = async () => {
       'Create a sample Python program that demonstrates object-oriented programming',
       // Token callback - called for each new piece of the response
       (token) => {
-        process.stdout.write(token); // This will print without newlines
+      //  process.stdout.write(token); // This will print without newlines
+        console.log("token",token)
         responseText += token;
       },
       // Complete callback - called when the response is finished
@@ -63,6 +63,7 @@ function App() {
       setHasRunTest(true);
     }
   }, [hasRunTest]);
+  
 
   return (
     <Router>

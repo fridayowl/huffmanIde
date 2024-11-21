@@ -5,6 +5,8 @@ import Directory, { FileSystemItem, DirectoryHandle } from './Directory';
 import DisableDefaultZoom from './DisableZoom';
 import Home from './Home';
 import OnboardingDialog from './OnboardingDialog';
+ 
+
 function IDEHome() {
   const [directoryStructure, setDirectoryStructure] = useState<FileSystemItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -20,7 +22,11 @@ function IDEHome() {
       setSelectedFile(storedFileContent);
     }
   }, []);
-
+  
+  
+  
+  
+  
   const handleFolderSelect = (folder: FileSystemItem[]) => {
     setDirectoryStructure(folder);
     setShowOnboarding(false);

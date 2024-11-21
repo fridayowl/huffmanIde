@@ -1,15 +1,16 @@
 import React, { ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Heart, Users, Code, Bell, User } from 'lucide-react';
 
 interface IconButtonProps {
     children: ReactNode;
+    isActive?: boolean;
 }
 
-const IconButton: React.FC<IconButtonProps> = ({ children }) => (
+const IconButton: React.FC<IconButtonProps> = ({ children, isActive }) => (
     <button
-        className="group relative p-2 rounded-lg overflow-hidden transition-all duration-300
-      hover:-translate-y-0.5"
+        className={`group relative p-2 rounded-lg overflow-hidden transition-all duration-300
+      hover:-translate-y-0.5 ${isActive ? 'bg-indigo-500/20' : ''}`}
     >
         <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50 
       opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -25,10 +26,14 @@ const IconButton: React.FC<IconButtonProps> = ({ children }) => (
 
 const NavBarMinimal: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleNavigation = (path: string) => {
         navigate(path);
     };
+
+    // Function to determine if a path is active
+    const isActivePath = (path: string) => location.pathname === path;
 
     return (
         <nav className="relative">
@@ -65,31 +70,31 @@ const NavBarMinimal: React.FC = () => {
 
                 {/* Navigation Icons */}
                 <div className="flex items-center space-x-2">
-                    <IconButton>
+                    <IconButton isActive={isActivePath('/health')}>
                         <button
                             onClick={() => handleNavigation('/health')}
-                            className="flex items-center gap-2 text-gray-400 hover:text-indigo-400 
-                transition-colors duration-300"
+                            className={`flex items-center gap-2 transition-colors duration-300
+                                ${isActivePath('/health') ? 'text-indigo-400' : 'text-gray-400 hover:text-indigo-400'}`}
                         >
                             <Heart className="w-5 h-5" />
                         </button>
                     </IconButton>
 
-                    <IconButton>
+                    <IconButton isActive={isActivePath('/community')}>
                         <button
                             onClick={() => handleNavigation('/community')}
-                            className="flex items-center gap-2 text-gray-400 hover:text-indigo-400 
-                transition-colors duration-300"
+                            className={`flex items-center gap-2 transition-colors duration-300
+                                ${isActivePath('/community') ? 'text-indigo-400' : 'text-gray-400 hover:text-indigo-400'}`}
                         >
                             <Users className="w-5 h-5" />
                         </button>
                     </IconButton>
 
-                    <IconButton>
+                    <IconButton isActive={isActivePath('/ide')}>
                         <button
                             onClick={() => handleNavigation('/ide')}
-                            className="flex items-center gap-2 text-gray-400 hover:text-indigo-400 
-                transition-colors duration-300"
+                            className={`flex items-center gap-2 transition-colors duration-300
+                                ${isActivePath('/ide') ? 'text-indigo-400' : 'text-gray-400 hover:text-indigo-400'}`}
                         >
                             <Code className="w-5 h-5" />
                         </button>
@@ -108,11 +113,12 @@ const NavBarMinimal: React.FC = () => {
                     {/* Home button */}
                     <Link
                         to="/"
-                        className="group relative ml-2 px-4 py-2 rounded-full overflow-hidden
-                transition-all duration-300 hover:-translate-y-0.5"
+                        className={`group relative ml-2 px-4 py-2 rounded-full overflow-hidden
+                transition-all duration-300 hover:-translate-y-0.5
+                ${isActivePath('/') ? 'bg-white/90' : ''}`}
                     >
-                        <div className="absolute inset-0 bg-white opacity-90 group-hover:opacity-100 
-                transition-opacity duration-300" />
+                        <div className={`absolute inset-0 bg-white ${isActivePath('/') ? 'opacity-90' : 'opacity-80'} 
+                group-hover:opacity-100 transition-opacity duration-300`} />
                         <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-100 
                 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute inset-0 rounded-full bg-indigo-500/10 blur-sm opacity-0 
