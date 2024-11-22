@@ -9,10 +9,10 @@
        "size": 68059448
     },
    "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTdFhaRUF1Q2JZaFZpa0ZtVGlvSmV6Ly9UV0VpRkZBQUFBQkFBQUFBQkFBQUFBQUFBQUFBRT0K",
-      "url": "https://your-s3-bucket.s3.amazonaws.com/your-app-arm.app.tar.gz",
-      "size": 68059448
-    },
+     "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTdFhaRUF1Q2JZaFZpa0ZtVGlvSmV6Ly9UV0VpRkZBQUFBQkFBQUFBQkFBQUFBQUFBQUFBRT0K",
+     "url": "https://huffman-updates.s3.ap-south-1.amazonaws.com/+releases/Huffman.dmg",
+     "size": 68059448
+   },
 
     "windows-x86_64": {
       "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTdFhaRUF1Q2JZaFZpa0ZtVGlvSmV6Ly9UV0VpRkZBQUFBQkFBQUFBQkFBQUFBQUFBQUFBRT0K",
