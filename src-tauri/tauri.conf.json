@@ -95,11 +95,11 @@
       "identifier": "com.huffmanide.ide",
       "longDescription": "",
       "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
+        "entitlements": "entitlements.plist",
+        "providerShortName": "7DYCNUWT79",
+        "signingIdentity": "Developer ID Application: Wenergie Io (7DYCNUWT79)",
         "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
+        "exceptionDomain": ""
       },
       "resources": [],
       "shortDescription": "",
@@ -121,7 +121,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-         
+
         "width": 800,
         "title": "HuffmanIDE"
       }

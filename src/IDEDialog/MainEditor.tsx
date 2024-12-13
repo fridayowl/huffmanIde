@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-    X, Save, Settings, Download, Copy,
+    X, Save, Download, Copy, MinusCircle, PlusCircle,
     Loader2, ChevronDown, Play, Wand2
 } from 'lucide-react';
 import { EditorView, basicSetup } from 'codemirror';
@@ -51,7 +51,6 @@ const syntaxHighlightingStyle = HighlightStyle.define([
 const fontSizeCompartment = new Compartment();
 const tabSizeCompartment = new Compartment();
 
-// Define diagnostic field for error tracking
 const diagnosticField = StateField.define<Diagnostic[]>({
     create() { return []; },
     update(diagnostics, tr) {
@@ -72,30 +71,44 @@ const MainEditor: React.FC<MainEditorProps> = ({
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
-    const [showSettings, setShowSettings] = useState(false);
     const [showGeneratePanel, setShowGeneratePanel] = useState(false);
-    const [fontSize, setFontSize] = useState(14);
-    const [tabSize, setTabSize] = useState(4);
     const [saveError, setSaveError] = useState<string | null>(null);
+
+    // Initialize fontSize from localStorage with fallback
+    const [fontSize, setFontSize] = useState(() => {
+        const savedSize = localStorage.getItem('editor-font-size');
+        return savedSize ? parseInt(savedSize) : 14;
+    });
+
+    // Initialize tabSize from localStorage with fallback
+    const [tabSize, setTabSize] = useState(() => {
+        const savedTabSize = localStorage.getItem('editor-tab-size');
+        return savedTabSize ? parseInt(savedTabSize) : 4;
+    });
 
     const editorRef = useRef<HTMLDivElement | null>(null);
     const editorViewRef = useRef<EditorView | null>(null);
     const timeTrackerRef = useRef<TimeMetricsTracker | null>(null);
     const mentalHealthTrackerRef = useRef<CodingMentalHealthTracker | null>(null);
 
+    // Persist font size changes
+    useEffect(() => {
+        localStorage.setItem('editor-font-size', fontSize.toString());
+        localStorage.setItem('editor-tab-size', tabSize.toString());
+    }, [fontSize, tabSize]);
+
     // Update content when prop changes
     useEffect(() => {
-        const newContent = code || '';
-        if (newContent !== content && editorViewRef.current) {
+        if (code !== content && editorViewRef.current) {
             const transaction = editorViewRef.current.state.update({
                 changes: {
                     from: 0,
                     to: editorViewRef.current.state.doc.length,
-                    insert: newContent
+                    insert: code || ''
                 }
             });
             editorViewRef.current.dispatch(transaction);
-            setContent(newContent);
+            setContent(code || '');
         }
     }, [code]);
 
@@ -143,7 +156,7 @@ const MainEditor: React.FC<MainEditorProps> = ({
         });
 
         const state = EditorState.create({
-            doc: content || undefined,
+            doc: content,
             extensions: [
                 basicSetup,
                 python(),
@@ -159,17 +172,12 @@ const MainEditor: React.FC<MainEditorProps> = ({
                 diagnosticField,
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {
-                        // Handle content changes
                         const newContent = update.state.doc.toString();
                         setContent(newContent);
                         onContentChange?.(newContent);
                         setHasUnsavedChanges(true);
-
-                        // Update metrics
                         timeTrackerRef.current?.recordKeystroke();
-                        if (mentalHealthTrackerRef.current) {
-                            mentalHealthTrackerRef.current.handleEditorUpdate(update);
-                        }
+                        mentalHealthTrackerRef.current?.handleEditorUpdate(update);
                     }
                 }),
             ],
@@ -183,9 +191,8 @@ const MainEditor: React.FC<MainEditorProps> = ({
         editorViewRef.current = view;
 
         // Initialize trackers
-        const trackerFileName = fileName || 'untitled';
-        timeTrackerRef.current = new TimeMetricsTracker(trackerFileName);
-        mentalHealthTrackerRef.current = new CodingMentalHealthTracker(view, trackerFileName);
+        timeTrackerRef.current = new TimeMetricsTracker(fileName);
+        mentalHealthTrackerRef.current = new CodingMentalHealthTracker(view, fileName);
 
         return () => {
             timeTrackerRef.current?.endSession();
@@ -210,7 +217,7 @@ const MainEditor: React.FC<MainEditorProps> = ({
         });
     }, [fontSize, tabSize]);
 
-    // Track window-level activity
+    // Activity tracking
     useEffect(() => {
         const handleActivity = () => {
             timeTrackerRef.current?.recordActivity();
@@ -225,6 +232,11 @@ const MainEditor: React.FC<MainEditorProps> = ({
             window.removeEventListener('mousedown', handleActivity);
         };
     }, []);
+
+    const handleFontSizeChange = (newSize: number) => {
+        const size = Math.min(Math.max(10, newSize), 24); // Clamp between 10 and 24
+        setFontSize(size);
+    };
 
     const handleCodeGenerated = useCallback((generatedCode: string) => {
         if (!editorViewRef.current) return;
@@ -263,24 +275,6 @@ const MainEditor: React.FC<MainEditorProps> = ({
             setTimeout(() => setIsSaving(false), 500);
         }
     }, [content, hasUnsavedChanges, onSave]);
-
-    const handleRun = useCallback(async () => {
-        if (!onRun) return;
-
-        setIsRunning(true);
-        try {
-            await handleSave();
-            await onRun();
-        } catch (error) {
-            console.error('Error during run:', error);
-            const proceed = window.confirm('Failed to save changes. Run anyway?');
-            if (proceed) {
-                await onRun();
-            }
-        } finally {
-            setIsRunning(false);
-        }
-    }, [handleSave, onRun]);
 
     const handleCopy = useCallback(() => {
         navigator.clipboard.writeText(content);
@@ -324,15 +318,41 @@ const MainEditor: React.FC<MainEditorProps> = ({
                             Unsaved changes
                         </span>
                     )}
+                    {/* Font Size Controls */}
+                    <div className="flex items-center gap-2 ml-4 px-2 py-1 rounded-lg"
+                        style={{ backgroundColor: `${customization.highlightColor}15` }}>
+                        <button
+                            onClick={() => handleFontSizeChange(fontSize - 1)}
+                            className="p-1 rounded-full hover:bg-white/10 transition-colors"
+                            style={{ color: customization.textColor }}
+                        >
+                            <MinusCircle size={14} />
+                        </button>
+                        <span className="text-xs" style={{ color: customization.textColor }}>
+                            {fontSize}px
+                        </span>
+                        <button
+                            onClick={() => handleFontSizeChange(fontSize + 1)}
+                            className="p-1 rounded-full hover:bg-white/10 transition-colors"
+                            style={{ color: customization.textColor }}
+                        >
+                            <PlusCircle size={14} />
+                        </button>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    {/* Enhanced Generate Button */}
                     <button
                         onClick={() => setShowGeneratePanel(true)}
-                        className="p-2 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2"
-                        style={{ color: customization.textColor }}
+                        className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all transform hover:scale-105"
+                        style={{
+                            backgroundColor: customization.highlightColor,
+                            color: 'white',
+                            boxShadow: `0 0 20px ${customization.highlightColor}40`
+                        }}
                     >
-                        <Wand2 size={16} />
-                        <span className="text-sm">Generate</span>
+                        <Wand2 size={16} className="animate-pulse" />
+                        <span className="text-sm font-medium">Generate</span>
                     </button>
                     <button
                         onClick={handleCopy}
@@ -342,18 +362,12 @@ const MainEditor: React.FC<MainEditorProps> = ({
                         <span className="text-sm">Copy</span>
                     </button>
                     <button
-                        onClick={() => setShowSettings(!showSettings)}
-                        className="p-2 rounded-lg hover:bg-white/5 transition-colors"
-                        style={{ color: customization.textColor }}>
-                        <Settings size={16} />
-                    </button>
-                    <button
                         onClick={handleSave}
                         disabled={isSaving || !hasUnsavedChanges}
                         className="px-3 py-1.5 rounded flex items-center gap-2"
                         style={{
-                            backgroundColor: customization.highlightColor,
-                            color: 'white',
+                            backgroundColor: `${customization.highlightColor}20`,
+                            color: customization.textColor,
                             opacity: (!hasUnsavedChanges || isSaving) ? 0.5 : 1
                         }}>
                         {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
@@ -367,47 +381,6 @@ const MainEditor: React.FC<MainEditorProps> = ({
                     </button>
                 </div>
             </div>
-
-            {/* Settings Panel */}
-            {showSettings && (
-                <div
-                    className="p-4 border-b"
-                    style={{
-                        backgroundColor: `${customization.highlightColor}05`,
-                        borderColor: `${customization.textColor}10`
-                    }}>
-                    <div className="flex gap-6">
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm" style={{ color: customization.textColor }}>
-                                Font Size:
-                            </label>
-                            <input
-                                type="number"
-                                value={fontSize}
-                                onChange={(e) => setFontSize(Number(e.target.value))}
-                                className="w-16 px-2 py-1 rounded bg-black/20 border border-white/10"
-                                style={{ color: customization.textColor }}
-                                min={10}
-                                max={24}
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm" style={{ color: customization.textColor }}>
-                                Tab Size:
-                            </label>
-                            <input
-                                type="number"
-                                value={tabSize}
-                                onChange={(e) => setTabSize(Number(e.target.value))}
-                                className="w-16 px-2 py-1 rounded bg-black/20 border border-white/10"
-                                style={{ color: customization.textColor }}
-                                min={2}
-                                max={8}
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Code Generation Panel */}
             {showGeneratePanel && (
@@ -452,11 +425,22 @@ const MainEditor: React.FC<MainEditorProps> = ({
                     </div>
                 )}
             </div>
+
+            {/* Tooltip for AI Generate */}
+            {/* <div
+                className="absolute top-16 right-4 bg-gray-900/95 text-white px-3 py-1.5 rounded text-xs max-w-xs"
+                style={{
+                    display: !showGeneratePanel ? 'block' : 'none',
+                    zIndex: 40,
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+            >
+                Use AI to generate Python code based on your description
+            </div> */}
         </div>
     );
 };
 
-// Add PropTypes validation if needed
 MainEditor.defaultProps = {
     code: '',
     fileName: 'Untitled',
