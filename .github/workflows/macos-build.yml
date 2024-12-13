@@ -16,27 +16,35 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       
+      - name: Debug Environment
+        run: |
+          pwd
+          ls -la
+          node --version
+          npm --version
+          rustc --version
+      
       - name: Install frontend dependencies
         run: |
           npm install
-          # List installed packages for debugging
           npm list --depth=0
       
+      - name: Debug Build Directory
+        run: |
+          pwd
+          ls -la
+          
       - name: Build Frontend
         run: |
           npm run build
-          # Check if build directory exists (matches your distDir in tauri.conf.json)
+          echo "Build completed, checking build directory:"
           ls -la build
       
-      - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0
+      - name: Build Tauri
+        run: |
+          cd src-tauri
+          cargo build --verbose
+          cd ..
+          npm run tauri build -- --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: HuffmanIDE-macos
-          path: |
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/macos/*.app
