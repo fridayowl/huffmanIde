@@ -1,4 +1,4 @@
-name: 'MacOS Build'
+name: 'MacOS Build Debug'
 on: [push]
 
 jobs:
@@ -15,36 +15,58 @@ jobs:
       
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
       
-      - name: Debug Environment
+      - name: Install SQLite
         run: |
-          pwd
-          ls -la
-          node --version
-          npm --version
-          rustc --version
-      
-      - name: Install frontend dependencies
+          brew install sqlite
+          
+      - name: Install Dependencies
         run: |
+          echo "Installing npm dependencies..."
           npm install
-          npm list --depth=0
-      
-      - name: Debug Build Directory
-        run: |
-          pwd
-          ls -la
+          echo "\nVerifying sqlite installation:"
+          sqlite3 --version
           
       - name: Build Frontend
         run: |
+          echo "Starting frontend build..."
           npm run build
-          echo "Build completed, checking build directory:"
-          ls -la build
-      
-      - name: Build Tauri
+          echo "\nBuild directory contents:"
+          ls -la build || echo "build directory not found"
+          
+      - name: Install Rust Dependencies
         run: |
           cd src-tauri
-          cargo build --verbose
+          echo "Updating Rust dependencies..."
+          cargo update
+          echo "Running cargo check..."
+          cargo check --verbose
           cd ..
+          
+      - name: Build Tauri
+        run: |
+          echo "Starting Tauri build with verbose output..."
           npm run tauri build -- --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUST_BACKTRACE: full
+          RUSTFLAGS: "-C debuginfo=2"
+          
+      - name: List Build Artifacts
+        if: always()
+        run: |
+          echo "Checking build artifacts..."
+          ls -R src-tauri/target/ || echo "No target directory"
+          
+      - name: Upload Logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-logs
+          path: |
+            npm-debug.log*
+            src-tauri/target/debug/build/**/output.txt
+            src-tauri/target/debug/build/**/stderr.txt
+            src-tauri/target/release/build/**/output.txt
