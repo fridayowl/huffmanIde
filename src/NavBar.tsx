@@ -105,10 +105,22 @@ const NavBarMinimal: React.FC = () => {
                 transition-colors duration-300" />
                     </IconButton>
 
-                    <IconButton>
-                        <User className="w-5 h-5 text-gray-400 group-hover:text-indigo-400 
-                transition-colors duration-300" />
+
+
+
+                    <IconButton isActive={isActivePath('/profile')}>
+                        <button
+                            onClick={() => handleNavigation('/profile')}
+                            className={`flex items-center gap-2 transition-colors duration-300
+                                ${isActivePath('/profile') ? 'text-indigo-400' : 'text-gray-400 hover:text-indigo-400'}`}
+                        >
+                            <User className="w-5 h-5" />
+                        </button>
                     </IconButton>
+
+
+
+                 
 
                     {/* Home button */}
                     <Link

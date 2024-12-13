@@ -1,0 +1,3 @@
+functions-framework
+vertexai
+google-cloud-aiplatform

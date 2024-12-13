@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
     ActivitySquare, Brain, Heart, Clock, Battery, Zap,
-    X, Code, Timer, FileCode, AlertCircle, Info,
-    Coffee, Target, Workflow, Sparkles, Flame,
-    Calculator, ChevronDown, ChevronUp,
-    LucideIcon
+    AlertTriangle, Activity, Info, Coffee, Target,
+    Workflow, Sparkles, Flame, Calculator, ChevronDown,
+    ChevronUp, X, FileCode, LucideIcon
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import NavBarMinimal from '../NavBar';
@@ -13,7 +12,10 @@ import { WaterReminder } from './reminders/WaterReminder';
 import { BreakReminder } from './reminders/BreakReminder';
 import { useSessionMetrics } from './useSessionMetrics';
 import { SessionGraph } from './SessionGraph';
+import StressPatternCard from './StressPatternCard';
+import HealthRecommendationsCard from './HealthRecommendationsCard';
 
+// Types and Interfaces
 interface MetricData {
     title: string;
     icon: LucideIcon;
@@ -32,6 +34,27 @@ interface MetricData {
     change: string;
 }
 
+interface MetricCardProps {
+    title: string;
+    value: string;
+    change: string;
+    icon: LucideIcon;
+    description: string;
+    impact: string;
+    tips: string[];
+    calculation: {
+        formula: string;
+        factors: string[];
+        frequency: string;
+    };
+    bgColor: string;
+    category: string;
+    animation?: string;
+    onInfoToggle: (title: string | null) => void;
+    isInfoVisible: boolean;
+}
+
+// Base Metrics Configuration
 const baseMetrics: Record<string, Omit<MetricData, 'value' | 'change'>> = {
     flowState: {
         title: "Flow State",
@@ -156,26 +179,7 @@ const baseMetrics: Record<string, Omit<MetricData, 'value' | 'change'>> = {
     }
 };
 
-interface MetricCardProps {
-    title: string;
-    value: string;
-    change: string;
-    icon: LucideIcon;
-    description: string;
-    impact: string;
-    tips: string[];
-    calculation: {
-        formula: string;
-        factors: string[];
-        frequency: string;
-    };
-    bgColor: string;
-    category: string;
-    animation?: string;
-    onInfoToggle: (title: string | null) => void;
-    isInfoVisible: boolean;
-}
-
+// MetricCard Component
 const MetricCard: React.FC<MetricCardProps> = ({
     title,
     value,
@@ -197,8 +201,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
     return (
         <div className={`${bgColor} ${animation} p-5 rounded-xl border border-white/5 backdrop-blur-sm 
-            transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-800/20 
-            ${isCodingStreak ? 'lg:row-span-2' : ''}`}>
+            transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-800/20 h-full`}>
             <div className="flex items-start justify-between mb-4">
                 <div className="flex flex-col">
                     <div className="p-2 bg-white/5 rounded-lg w-fit">
@@ -234,7 +237,11 @@ const MetricCard: React.FC<MetricCardProps> = ({
                         <p className="text-sm text-gray-400 leading-relaxed line-clamp-3">
                             {description}
                         </p>
-                        {isCodingStreak && <SessionGraph data={sessionData} />}
+                        {isCodingStreak && (
+                            <div className="h-40 mt-4">
+                                <SessionGraph data={sessionData} />
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -297,6 +304,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
     );
 };
 
+// Main HealthAnalytics Component
 const HealthAnalytics = () => {
     const [showInfo, setShowInfo] = useState<string | null>(null);
     const [metrics, setMetrics] = useState<Record<string, HealthMetricResult>>({});
@@ -306,7 +314,7 @@ const HealthAnalytics = () => {
         updateMetrics();
         const intervalId = setInterval(() => {
             setUpdateCounter(prev => prev + 1);
-        }, 60000);
+        }, 60000); // Update every minute
         return () => clearInterval(intervalId);
     }, []);
 
@@ -339,11 +347,15 @@ const HealthAnalytics = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0D1117] pb-24">
-            <NavBarMinimal />
+        <div className="min-h-screen bg-[#0D1117]">
+            {/* Sticky NavBar */}
+            <div className="sticky top-0 z-50 bg-[#0D1117] border-b border-gray-800">
+                <NavBarMinimal />
+            </div>
 
             <main className="container mx-auto px-4 py-6 space-y-8">
-                <div className="space-y-1">
+                {/* Sticky Header */}
+                <div className="sticky top-16 z-40 bg-[#0D1117] pt-4 pb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-gray-800 rounded-lg">
                             <ActivitySquare className="w-6 h-6 text-gray-400" />
@@ -355,46 +367,59 @@ const HealthAnalytics = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
-                    {/* First three metric cards */}
-                    {getMetricCards().slice(0, 3).map((metric, index) => (
-                        <MetricCard
-                            key={index}
-                            {...metric}
-                            onInfoToggle={setShowInfo}
-                            isInfoVisible={showInfo === metric.title}
-                        />
+                {/* Updated Grid Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Top row - first four metric cards */}
+                    {getMetricCards().slice(0, 4).map((metric, index) => (
+                        <div key={index} className="h-full">
+                            <MetricCard
+                                {...metric}
+                                onInfoToggle={setShowInfo}
+                                isInfoVisible={showInfo === metric.title}
+                            />
+                        </div>
                     ))}
 
-                    {/* Fourth column with focus card and timers */}
-                    <div className="space-y-4">
-                        {getMetricCards()[3] && (
-                            <MetricCard
-                                {...getMetricCards()[3]}
-                                onInfoToggle={setShowInfo}
-                                isInfoVisible={showInfo === getMetricCards()[3].title}
-                            />
-                        )}
-                        <div className="flex gap-4">
+                    {/* Middle row with equal heights */}
+                    <div className="lg:col-span-2 grid grid-cols-3 gap-4">
+                        {/* Coding streak card */}
+                        <div className="col-span-2">
+                            {getMetricCards()[4] && (
+                                <MetricCard
+                                    {...getMetricCards()[4]}
+                                    onInfoToggle={setShowInfo}
+                                    isInfoVisible={showInfo === getMetricCards()[4].title}
+                                />
+                            )}
+                        </div>
+                        {/* Reminders column */}
+                        <div className="col-span-1 flex flex-col gap-4">
                             <WaterReminder />
                             <BreakReminder />
                         </div>
                     </div>
 
-                    {/* Fifth column with taller coding streak card */}
-                    {getMetricCards()[4] && (
-                        <MetricCard
-                            {...getMetricCards()[4]}
-                            onInfoToggle={setShowInfo}
-                            isInfoVisible={showInfo === getMetricCards()[4].title}
-                        />)}
+                    {/* Stress Pattern Card with matching height */}
+                    <div className="lg:col-span-2 h-full">
+                        <div className="h-full bg-gradient-to-br from-blue-950 to-blue-900 rounded-xl border border-white/5">
+                            <StressPatternCard
+                                onInfoToggle={setShowInfo}
+                                isInfoVisible={showInfo === 'stressPattern'}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Bottom row - Health Recommendations aligned to left */}
+                    <div className="lg:col-span-2">
+                        <HealthRecommendationsCard />
+                    </div>
                 </div>
             </main>
         </div>
     );
 };
 
-// Utility type for strict type checking of metric keys
+// Utility types for better type checking
 type MetricKey = keyof typeof baseMetrics;
 
 // Additional types for better type safety
@@ -406,5 +431,33 @@ interface ExtendedHealthMetricResult extends HealthMetricResult {
     };
 }
 
-// Export the component
+// Add styles for animations
+const styles = `
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+`;
+
+// Add the styles to the document
+if (typeof document !== 'undefined') {
+    const styleSheet = document.createElement('style');
+    styleSheet.type = 'text/css';
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
+}
+
 export default HealthAnalytics;

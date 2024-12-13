@@ -10,7 +10,16 @@ const OLLAMA_PATHS = [
   '/opt/homebrew/bin/ollama',
   '/opt/local/bin/ollama'
 ];
+interface ModelInfo {
+  name: string;
+  size: string;
+  modified: string;
+  digest: string;
+}
 
+export interface ModelDetails {
+  models: ModelInfo[];
+}
 /**
  * Find the correct Ollama path
  */
@@ -107,6 +116,22 @@ export async function checkOllamaInstallation(): Promise<{
     apiAccessible,
     shellAccessible
   };
+}
+export async function getAvailableModels(): Promise<ModelDetails> {
+  try {
+    const response = await fetch('http://localhost:11434/api/tags', {
+      method: 'GET',
+      timeout: 5.0
+    });
+    
+    if (response.ok) {
+      return response.data as ModelDetails;
+    }
+    return { models: [] };
+  } catch (error) {
+    console.error('Failed to fetch model details:', error);
+    return { models: [] };
+  }
 }
 
 export async function pullModel(

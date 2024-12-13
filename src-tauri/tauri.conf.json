@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "HuffmanIDE",
-    "version": "0.0.1"
+    "version": "1.2.1"
   },
   "tauri": {
     "allowlist": {
@@ -114,12 +114,7 @@
       "csp": null
     },
     "updater": {
-      "active": true,
-      "endpoints": [
-        "https://huffman-updates.s3.ap-south-1.amazonaws.com/updates.json"
-      ],
-      "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE4NzNGMDRCRjdGOTAzQTcKUldTbkEvbjNTL0J6R1BKeFhCajdNZ0JTV1NhaldyR09uNWtCS1ZDY0RMRFdvWklCWjBjdnpHK1QK"
+      "active": false
     },
     "windows": [
       {
