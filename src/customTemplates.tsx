@@ -1,5 +1,5 @@
 // Theme Categories
-const THEME_CATEGORIES = {
+export const THEME_CATEGORIES = {
     IDE_INSPIRED: "IDE & Editor Inspired",
     MOVIES_TV: "Movies & TV",
     ANIME_MANGA: "Anime & Manga",

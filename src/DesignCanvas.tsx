@@ -244,25 +244,26 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
     
 
 
-    // Template card component
-    const TemplateCard: React.FC<{ template: Template; onSelect: (template: Template) => void }> = ({ template, onSelect }) => (
-        <div
-            className="w-30 h-40 bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transition-transform hover:scale-105"
-            onClick={() => onSelect(template)}
-        >
-            <div className="h-2/3 p-2 flex flex-col justify-between" style={{ backgroundColor: template.canvas?.backgroundColor || '#ffffff' }}>
-                <div className="flex justify-between">
-                    <div className="w-5 h-5 rounded" style={{ backgroundColor: template.blocks?.class?.backgroundColor || '#cccccc' }} />
-                    <div className="w-5 h-5 rounded" style={{ backgroundColor: template.blocks?.class_function?.backgroundColor || '#aaaaaa' }} />
-                </div>
-                <div className="w-full h-1 rounded-full" style={{ backgroundColor: template.connections?.inherits?.lineColor || '#000000' }} />
-            </div>
-            <div className="h-1/3 p-2 flex flex-col justify-between bg-white">
-                <h3 className="font-bold text-xs">{template.name}</h3>
-                <p className="text-xs text-gray-600">Click to apply</p>
-            </div>
-        </div>
-    );
+    const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+
+    // Group templates by category
+    const groupedTemplates = customTemplates.reduce((acc, template) => {
+        if (!acc[template.category]) {
+            acc[template.category] = [];
+        }
+        acc[template.category].push(template);
+        return acc;
+    }, {} as Record<string, typeof customTemplates>);
+
+    const toggleCategory = (category: string) => {
+        setExpandedCategories((prev) =>
+            prev.includes(category)
+                ? prev.filter((cat) => cat !== category)
+                : [...prev, category]
+        );
+    };
+
+
 
     return (
         <div className="w-full h-screen bg-[#1a1f2d] p-4">
@@ -506,38 +507,72 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                            {customTemplates.map((template, index) => (
-                                <div
-                                    key={index}
-                                    className="group relative bg-[#2b3240] rounded-lg shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-gray-800/50"
-                                    onClick={() => handleTemplateChange(template)}
-                                >
+                        <div className="space-y-4">
+                            {Object.entries(groupedTemplates).map(([category, templates], index) => (
+                                <div key={category}>
+                                    {/* Category Header */}
                                     <div
-                                        className="h-32 p-3 flex flex-col justify-between"
-                                        style={{ backgroundColor: template.canvas?.backgroundColor || '#1a1f2d' }}
+                                        className="flex justify-between items-center cursor-pointer bg-gray-800 p-4 rounded-lg"
+                                        onClick={() => toggleCategory(category)}
                                     >
-                                        <div className="flex justify-between">
-                                            <div
-                                                className="w-6 h-6 rounded border border-gray-700/50"
-                                                style={{ backgroundColor: template.blocks?.class?.backgroundColor || '#2b3240' }}
-                                            />
-                                            <div
-                                                className="w-6 h-6 rounded border border-gray-700/50"
-                                                style={{ backgroundColor: template.blocks?.class_function?.backgroundColor || '#2b3240' }}
-                                            />
+                                        <h3 className="font-bold text-lg text-gray-200">{category}</h3>
+                                        <span className="text-gray-400">
+                                            {expandedCategories.includes(category) ? '-' : '+'}
+                                        </span>
+                                    </div>
+                                    {/* Templates List */}
+                                    {(expandedCategories.includes(category) || index <= 3) && (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mt-4">
+                                            {templates.map((template, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="group relative bg-[#2b3240] rounded-lg shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-gray-800/50"
+                                                    onClick={() => handleTemplateChange(template)}
+                                                >
+                                                    <div
+                                                        className="h-32 p-3 flex flex-col justify-between"
+                                                        style={{
+                                                            backgroundColor:
+                                                                template.canvas?.backgroundColor || '#1a1f2d',
+                                                        }}
+                                                    >
+                                                        <div className="flex justify-between">
+                                                            <div
+                                                                className="w-6 h-6 rounded border border-gray-700/50"
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        template.blocks?.class?.backgroundColor ||
+                                                                        '#2b3240',
+                                                                }}
+                                                            />
+                                                            <div
+                                                                className="w-6 h-6 rounded border border-gray-700/50"
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        template.blocks?.class_function
+                                                                            ?.backgroundColor || '#2b3240',
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div
+                                                            className="w-full h-1 rounded-full"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    template.connections?.inherits?.lineColor ||
+                                                                    '#4a5568',
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="p-3 bg-[#2b3240] border-t border-gray-800/50">
+                                                        <h3 className="font-medium text-gray-200 text-sm mb-1">
+                                                            {template.name}
+                                                        </h3>
+                                                        <p className="text-xs text-gray-400">Click to apply</p>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div
-                                            className="w-full h-1 rounded-full"
-                                            style={{ backgroundColor: template.connections?.inherits?.lineColor || '#4a5568' }}
-                                        />
-                                    </div>
-                                    <div className="p-3 bg-[#2b3240] border-t border-gray-800/50">
-                                        <h3 className="font-medium text-gray-200 text-sm mb-1">{template.name}</h3>
-                                        <p className="text-xs text-gray-400">Click to apply</p>
-                                    </div>
-                                    {/* Hover effect overlay */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    )}
                                 </div>
                             ))}
                         </div>
