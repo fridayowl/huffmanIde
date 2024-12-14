@@ -7,8 +7,8 @@
     "distDir": "../build"
   },
   "package": {
-    "productName": "HuffmanIDE",
-    "version": "1.2.1"
+    "productName": "HuffmanIDE_MVP",
+    "version": "1.3.1"
   },
   "tauri": {
     "allowlist": {

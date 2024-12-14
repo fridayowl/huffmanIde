@@ -27,3 +27,4 @@ Thumbs.db
 # Ignore Tauri build folders
 src-tauri/release/
 src-tauri/debug/
+.config/apple-signing/
