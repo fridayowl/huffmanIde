@@ -14,7 +14,7 @@ const THEME_CATEGORIES = {
 const customTemplates = [
     {
         name: "VSCode Dark+",
-
+        
         category: THEME_CATEGORIES.IDE_INSPIRED,
         blocks: {
             class: {
@@ -75,7 +75,7 @@ const customTemplates = [
     }, {
         name: "Dracula",
         category: THEME_CATEGORIES.IDE_INSPIRED,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#282A36",
@@ -136,7 +136,7 @@ const customTemplates = [
     {
         name: "Nord",
         category: THEME_CATEGORIES.IDE_INSPIRED,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#2E3440",
@@ -197,7 +197,7 @@ const customTemplates = [
     {
         name: "One Dark Pro",
         category: THEME_CATEGORIES.IDE_INSPIRED,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#282C34",
@@ -257,7 +257,7 @@ const customTemplates = [
     }, {
         name: "Matrix Reloaded",
         category: THEME_CATEGORIES.MOVIES_TV,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#000000",
@@ -318,7 +318,7 @@ const customTemplates = [
     {
         name: "Starry Night Dream",
         category: THEME_CATEGORIES.MOVIES_TV,
-
+       
         blocks: {
             class: {
                 backgroundColor: "#1E1E78",
@@ -379,7 +379,7 @@ const customTemplates = [
     {
         name: "Mars Aurora",
         category: THEME_CATEGORIES.MOVIES_TV,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#1C1E26",
@@ -439,7 +439,7 @@ const customTemplates = [
     }, {
         name: "One Piece Adventure",
         category: THEME_CATEGORIES.ANIME_MANGA,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#D42A2A",
@@ -500,7 +500,7 @@ const customTemplates = [
     {
         name: "Candy Crush Saga",
         category: THEME_CATEGORIES.GAMES,
-
+         
         blocks: {
             class: {
                 backgroundColor: "#FF69B4",
@@ -561,7 +561,7 @@ const customTemplates = [
     {
         name: "Ghibli Dreamscape",
         category: THEME_CATEGORIES.ANIME_MANGA,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#E7E6D5",
@@ -621,7 +621,7 @@ const customTemplates = [
     }, {
         name: "Forest Night",
         category: THEME_CATEGORIES.NATURE,
-
+         
         blocks: {
             class: {
                 backgroundColor: "#2B303B",
@@ -682,7 +682,7 @@ const customTemplates = [
     {
         name: "Neon Cyberpunk",
         category: THEME_CATEGORIES.CYBERPUNK,
-
+       
         blocks: {
             class: {
                 backgroundColor: "#0D0221",
@@ -742,7 +742,7 @@ const customTemplates = [
     }, {
         name: "Protanopia Friendly",
         category: THEME_CATEGORIES.ACCESSIBILITY,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#F7F7F7",
@@ -803,7 +803,7 @@ const customTemplates = [
     {
         name: "High Contrast",
         category: THEME_CATEGORIES.ACCESSIBILITY,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#000000",
@@ -864,7 +864,7 @@ const customTemplates = [
     {
         name: "Deuteranopia Friendly",
         category: THEME_CATEGORIES.ACCESSIBILITY,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#F5F5F5",
@@ -924,7 +924,7 @@ const customTemplates = [
     }, {
         name: "Google Playground",
         category: THEME_CATEGORIES.BRANDS,
-
+        
         blocks: {
             class: {
                 backgroundColor: "#4285F4",

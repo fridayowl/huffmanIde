@@ -55,6 +55,54 @@ export default function StressPatternCard({ onInfoToggle, isInfoVisible }: Stres
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="relative h-full bg-transparent p-6 rounded-xl">
+                {/* AI Processing Indicator */}
+                <div className="mb-4 bg-blue-500/10 border border-blue-400/20 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+                            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse delay-75" />
+                            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse delay-150" />
+                        </div>
+                        <p className="text-sm text-blue-200">
+                            Analyzing with <span className="font-semibold">Gemini-1.5-flash-002</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-start justify-between mb-6">
+                    <div className="flex flex-col">
+                        <div className="p-2 bg-white/5 rounded-lg w-fit animate-pulse">
+                            <Brain className="w-5 h-5 text-gray-300" />
+                        </div>
+                        <div className="mt-2">
+                            <p className="text-xs text-gray-400 font-medium">Mental Health</p>
+                            <h3 className="text-lg font-medium text-gray-200">Stress Patterns</h3>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Loading Placeholder Content */}
+                <div className="space-y-6">
+                    <div className="h-20 bg-white/5 rounded-lg animate-pulse" />
+                    <div className="space-y-4">
+                        <div className="h-40 bg-white/5 rounded-lg animate-pulse" />
+                        <div className="space-y-2">
+                            <div className="h-6 w-1/3 bg-white/5 rounded animate-pulse" />
+                            <div className="h-4 w-full bg-white/5 rounded animate-pulse" />
+                            <div className="h-4 w-2/3 bg-white/5 rounded animate-pulse" />
+                        </div>
+                    </div>
+                    <div className="text-xs text-gray-400 animate-pulse">
+                        Analyzing stress patterns...
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (!analysis) return null;
 
     return (

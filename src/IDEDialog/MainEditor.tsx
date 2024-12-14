@@ -14,6 +14,7 @@ import { Diagnostic } from '@codemirror/lint';
 import CodeGenerationPanel from './CodeGenerationPanel';
 import { TimeMetricsTracker } from '../health_analytics/timeMetricsTracker';
 import { CodingMentalHealthTracker } from '../health_analytics/codingMentalHealthTracker';
+import { getCustomThemeCodeHighlighter } from '../customThemeHighlighter';
 
 interface MainEditorProps {
     code?: string | null;
@@ -30,8 +31,35 @@ interface MainEditorProps {
     onContentChange?: (newContent: string) => void;
 }
 
+
+const createSyntaxHighlighting = (customization: any) => {
+    // Get the theme name from customization or default to "VSCode Dark+"
+    const themeName = customization?.themeName || "VSCode Dark+";
+    const themeColors = getCustomThemeCodeHighlighter(themeName);
+
+    return HighlightStyle.define([
+        { tag: tags.keyword, color: themeColors.keyword, fontWeight: "bold" },
+        { tag: tags.operator, color: themeColors.operator },
+        { tag: tags.special(tags.variableName), color: themeColors.variable },
+        { tag: tags.string, color: themeColors.string },
+        { tag: tags.comment, color: themeColors.comment, fontStyle: "italic" },
+        { tag: tags.function(tags.variableName), color: themeColors.function },
+        { tag: tags.function(tags.propertyName), color: themeColors.function },
+        { tag: tags.bool, color: themeColors.number },
+        { tag: tags.number, color: themeColors.number },
+        { tag: tags.className, color: themeColors.class, fontWeight: "bold" },
+        { tag: tags.definition(tags.propertyName), color: themeColors.property },
+        { tag: tags.angleBracket, color: themeColors.operator },
+        { tag: tags.typeName, color: themeColors.class },
+        { tag: tags.tagName, color: themeColors.tag },
+        { tag: tags.attributeName, color: themeColors.attribute }
+    ]);
+};
+
+
+
 const syntaxHighlightingStyle = HighlightStyle.define([
-    { tag: tags.keyword, color: "#FF79C6", fontWeight: "bold" },
+    { tag: tags.keyword, color: "#FF79Cd", fontWeight: "bold" },
     { tag: tags.operator, color: "#FF79C6" },
     { tag: tags.special(tags.variableName), color: "#50FA7B" },
     { tag: tags.string, color: "#F1FA8C" },
@@ -154,6 +182,7 @@ const MainEditor: React.FC<MainEditorProps> = ({
                 minWidth: '3em',
             },
         });
+        const syntaxHighlightingStyle = createSyntaxHighlighting(customization);
 
         const state = EditorState.create({
             doc: content,

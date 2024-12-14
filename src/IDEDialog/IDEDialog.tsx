@@ -91,20 +91,34 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
     onBlockCodeChange,
     onRun
 }) => {
-    // Core state
-    const [content, setContent] = useState<string>(code ?? '');
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isRunning, setIsRunning] = useState(false);
-    const [isFromIDE, setIsFromIDE] = useState(false);
+    // Load panel states from localStorage with default false
+    const [leftPanelVisible, setLeftPanelVisible] = useState<boolean>(() => {
+        const stored = localStorage.getItem('ide-left-panel-visible');
+        return stored ? JSON.parse(stored) : false;
+    });
+    const [rightPanelVisible, setRightPanelVisible] = useState<boolean>(() => {
+        const stored = localStorage.getItem('ide-right-panel-visible');
+        return stored ? JSON.parse(stored) : false;
+    });
 
-    // Panel visibility state
-    const [leftPanelVisible, setLeftPanelVisible] = useState(true);
-    const [rightPanelVisible, setRightPanelVisible] = useState(true);
+    // Save panel states to localStorage whenever they change
+    useEffect(() => {
+        localStorage.setItem('ide-left-panel-visible', JSON.stringify(leftPanelVisible));
+    }, [leftPanelVisible]);
+
+    useEffect(() => {
+        localStorage.setItem('ide-right-panel-visible', JSON.stringify(rightPanelVisible));
+    }, [rightPanelVisible]);
+
+    const [content, setContent] = useState<string>(code ?? '');
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+    const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [isRunning, setIsRunning] = useState<boolean>(false);
+    const [isFromIDE, setIsFromIDE] = useState<boolean>(false);
 
     // Layout constants
-    const PANEL_WIDTH = 320; // Width of side panels in pixels
-    const PANEL_GAP = 16; // Gap between panels in pixels
+    const PANEL_WIDTH = 320;
+    const PANEL_GAP = 16;
 
     // Effect to set IDE source type
     useEffect(() => {
@@ -200,22 +214,20 @@ const IDEDialog: React.FC<IDEDialogProps> = ({
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                {/* Left Panel Controls */}
+                {/* Panel Controls */}
                 <PanelControl
                     side="left"
                     isVisible={leftPanelVisible}
-                    onToggle={() => setLeftPanelVisible(prev => !prev)}
+                    onToggle={() => setLeftPanelVisible((prev: boolean) => !prev)}
                     icons={[FileText, TestTube]}
                     labels={['Documentation Panel', 'Testing Panel']}
                     customization={customization}
                     panelWidth={PANEL_WIDTH}
                 />
-
-                {/* Right Panel Controls */}
                 <PanelControl
                     side="right"
                     isVisible={rightPanelVisible}
-                    onToggle={() => setRightPanelVisible(prev => !prev)}
+                    onToggle={() => setRightPanelVisible((prev: boolean) => !prev)}
                     icons={[PlayCircle, BarChart]}
                     labels={['Execution Panel', 'Analytics Panel']}
                     customization={customization}

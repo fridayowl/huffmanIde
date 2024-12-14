@@ -493,18 +493,52 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
             />
 
             {/* Templates Panel */}
+            {/* Templates Panel */}
             {isTemplatesPanelOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-lg w-11/12 max-w-6xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold">Choose a Theme</h2>
-                            <button onClick={() => setIsTemplatesPanelOpen(false)} className="p-1 rounded-full hover:bg-gray-200">
-                                <X size={24} />
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
+                    <div className="bg-[#1a1f2d] border border-gray-800/50 p-8 rounded-lg w-11/12 max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-gray-200">Choose a Theme</h2>
+                            <button
+                                onClick={() => setIsTemplatesPanelOpen(false)}
+                                className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition-colors"
+                            >
+                                <X size={20} />
                             </button>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                             {customTemplates.map((template, index) => (
-                                <TemplateCard key={index} template={template} onSelect={handleTemplateChange} />
+                                <div
+                                    key={index}
+                                    className="group relative bg-[#2b3240] rounded-lg shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-gray-800/50"
+                                    onClick={() => handleTemplateChange(template)}
+                                >
+                                    <div
+                                        className="h-32 p-3 flex flex-col justify-between"
+                                        style={{ backgroundColor: template.canvas?.backgroundColor || '#1a1f2d' }}
+                                    >
+                                        <div className="flex justify-between">
+                                            <div
+                                                className="w-6 h-6 rounded border border-gray-700/50"
+                                                style={{ backgroundColor: template.blocks?.class?.backgroundColor || '#2b3240' }}
+                                            />
+                                            <div
+                                                className="w-6 h-6 rounded border border-gray-700/50"
+                                                style={{ backgroundColor: template.blocks?.class_function?.backgroundColor || '#2b3240' }}
+                                            />
+                                        </div>
+                                        <div
+                                            className="w-full h-1 rounded-full"
+                                            style={{ backgroundColor: template.connections?.inherits?.lineColor || '#4a5568' }}
+                                        />
+                                    </div>
+                                    <div className="p-3 bg-[#2b3240] border-t border-gray-800/50">
+                                        <h3 className="font-medium text-gray-200 text-sm mb-1">{template.name}</h3>
+                                        <p className="text-xs text-gray-400">Click to apply</p>
+                                    </div>
+                                    {/* Hover effect overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -520,24 +554,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({ selectedFile, selectedFileN
                 />
             )}
 
-            {/* Template Selection Modal */}
-            {isTemplatesPanelOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-lg w-11/12 max-w-6xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold">Choose a Theme</h2>
-                            <button onClick={() => setIsTemplatesPanelOpen(false)} className="p-1 rounded-full hover:bg-gray-200">
-                                <X size={24} />
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                            {customTemplates.map((template, index) => (
-                                <TemplateCard key={index} template={template} onSelect={handleTemplateChange} />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
+           
+            
 
             {/* Settings Panel */}
             <SettingsPanel
