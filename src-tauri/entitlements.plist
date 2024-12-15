@@ -2,9 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>
-        <!-- Basic App Permissions -->
+        <!-- Enable App Sandbox -->
         <key>com.apple.security.app-sandbox</key>
-        <false/>
+        <true/>
 
         <!-- Network Access -->
         <key>com.apple.security.network.client</key>
@@ -17,33 +17,21 @@
         <true/>
         <key>com.apple.security.files.downloads.read-write</key>
         <true/>
-        <key>com.apple.security.files.all</key>
-        <true/>
+
+        <!-- Remove this as it conflicts with sandbox -->
+        <!-- <key>com.apple.security.files.all</key>
+        <true/> -->
 
         <!-- Code Execution -->
         <key>com.apple.security.cs.allow-jit</key>
         <true/>
-        <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-        <true/>
-        <key>com.apple.security.cs.disable-library-validation</key>
-        <true/>
-        <key>com.apple.security.cs.debugger</key>
-        <true/>
 
-        <!-- Shell/Terminal Access -->
-        <key>com.apple.security.temporary-exception.sbpl</key>
-        <string>(allow process-exec-interpreter)</string>
+        <!-- Python/Shell Access -->
         <key>com.apple.security.automation.apple-events</key>
         <true/>
 
-        <!-- Additional Required Permissions -->
-        <key>com.apple.security.inherit</key>
-        <true/>
+        <!-- For Development Only - Remove for Release -->
         <key>com.apple.security.get-task-allow</key>
-        <true/>
-
-        <!-- Python Execution Related -->
-        <key>com.apple.security.cs.disable-executable-page-protection</key>
-        <true/>
+        <false/>
     </dict>
 </plist>

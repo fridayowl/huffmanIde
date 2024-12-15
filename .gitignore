@@ -28,3 +28,7 @@ Thumbs.db
 src-tauri/release/
 src-tauri/debug/
 .config/apple-signing/
+.config/apple-signing/
+
+# Local Netlify folder
+.netlify

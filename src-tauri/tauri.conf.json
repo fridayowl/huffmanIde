@@ -26,12 +26,12 @@
         "scope": [
           {
             "name": "python",
-            "cmd": "python",
+            "cmd": "/usr/bin/python",
             "args": true
           },
           {
             "name": "python3",
-            "cmd": "python3",
+            "cmd": "/usr/bin/python3",
             "args": true
           },
           {
@@ -92,13 +92,13 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.huffmanide.ide",
+      "identifier": "io.wenergie.huffmanide",
       "longDescription": "",
       "macOS": {
         "entitlements": "entitlements.plist",
         "providerShortName": "7DYCNUWT79",
         "signingIdentity": "Developer ID Application: Wenergie Io (7DYCNUWT79)",
-        "frameworks": [],
+        "frameworks": [], 
         "exceptionDomain": ""
       },
       "resources": [],
