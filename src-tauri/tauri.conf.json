@@ -18,7 +18,6 @@
         "open": true,
         "save": true
       },
-
       "shell": {
         "all": true,
         "execute": true,
@@ -53,6 +52,15 @@
             "name": "rm",
             "cmd": "rm",
             "args": true
+          },
+          {
+            "name": "git",
+            "cmd": "git",
+            "args": [
+              {
+                "validator": "\\S+"
+              }
+            ]
           }
         ]
       },
@@ -62,13 +70,31 @@
         "scope": ["http://localhost:11434/*"]
       },
       "fs": {
-        "all": true,
+        "all": false,
         "readFile": true,
         "writeFile": true,
         "readDir": true,
         "exists": true,
         "createDir": true,
-        "scope": ["**"]
+        "removeDir": true,
+        "removeFile": true,
+        "scope": {
+          "allow": [
+            "$APPDATA/**",
+            "$APPCONFIG/**",
+            "$APPLOCAL/**",
+            "$DESKTOP/**",
+            "$DOCUMENT/**",
+            "$DOWNLOAD/**",
+            "$HOME/**",
+            "$PICTURE/**",
+            "$PUBLIC/**",
+            "$RUNTIME/**",
+            "$TEMP/**",
+            "**"
+          ],
+          "deny": ["$APPDATA/*/sensitive/**", "$SYSTEM/**"]
+        }
       },
       "path": {
         "all": true
@@ -98,7 +124,7 @@
         "entitlements": "entitlements.plist",
         "providerShortName": "7DYCNUWT79",
         "signingIdentity": "Developer ID Application: Wenergie Io (7DYCNUWT79)",
-        "frameworks": [], 
+        "frameworks": [],
         "exceptionDomain": ""
       },
       "resources": [],
@@ -121,7 +147,6 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-
         "width": 800,
         "title": "HuffmanIDE"
       }

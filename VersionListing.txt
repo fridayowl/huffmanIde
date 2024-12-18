@@ -232,6 +232,18 @@ Version 3.1
 
 
 
+Version 3.1.1 -
+       Focus on loading fies from git 
+       Improve the  connection creating algorithm (scratch)
+       Any changes save the files to the system storage 
+       Push to git hub 
+       
+
+
+
+
+
+
 
 
 Version 5 : Focus on code generation and code analysis 
